@@ -474,11 +474,153 @@
       #btnCerrarDiff    { background: #45475a; color: #cdd6f4; }
       #btnCerrarDiff:hover { background: #585b70; }
 
+
+
+      /* ============================================================
+      PANEL ÁRBOL DE FUNCIONES
+      ============================================================ */
+      #panelArbol {
+        position: fixed;
+        top: 0;
+        left: -240px;
+        width: 230px;
+        height: 100vh;
+        background: var(--bg-gutter);
+        border-right: 2px solid var(--border-input);
+        z-index: 8888;
+        display: flex;
+        flex-direction: column;
+        transition: left 0.25s ease;
+        box-shadow: 3px 0 12px rgba(0,0,0,0.15);
+      }
+      #panelArbol.abierto { left: 0; }
+
+      #panelArbol-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 10px;
+        background: var(--bg-menu);
+        border-bottom: 1px solid var(--border-input);
+        flex-shrink: 0;
+      }
+      #panelArbol-header span {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: bold;
+        color: var(--color-menu-text);
+        letter-spacing: 0.06em;
+      }
+
+      #panelArbol-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 6px 0;
+      }
+      #panelArbol-scroll::-webkit-scrollbar { width: 4px; }
+      #panelArbol-scroll::-webkit-scrollbar-track { background: transparent; }
+      #panelArbol-scroll::-webkit-scrollbar-thumb { background: var(--fg-gutter); border-radius: 3px; }
+
+      #panelArbol-buscar {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        width: 100%;
+        padding: 5px 8px;
+        border: none;
+        border-bottom: 1px solid var(--border-input);
+        background: var(--bg-input);
+        color: var(--fg-input);
+        outline: none;
+        box-sizing: border-box;
+        flex-shrink: 0;
+      }
+      #panelArbol-buscar:focus { border-bottom-color: var(--fold-color); }
+
+      #panelArbol-count {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        color: var(--fg-gutter);
+        padding: 3px 10px;
+        border-bottom: 1px solid var(--border-input);
+        flex-shrink: 0;
+      }
+
+      .arbol-fila {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        cursor: pointer;
+        transition: background 0.12s;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        border-left: 3px solid transparent;
+      }
+      .arbol-fila:hover { background: var(--bg-activeline); }
+      .arbol-fila.activa {
+        background: var(--bg-activeline);
+        border-left-color: var(--fold-color);
+      }
+      .arbol-fila.tipo-function { }
+      .arbol-fila.tipo-class    { font-weight: bold; }
+      .arbol-fila.tipo-const    { opacity: 0.85; }
+
+      .arbol-punto {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .arbol-nombre {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--fg-editor);
+      }
+      .arbol-linea {
+        font-size: 10px;
+        color: var(--fg-gutter);
+        flex-shrink: 0;
+        min-width: 30px;
+        text-align: right;
+      }
+      .arbol-vacio {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        color: var(--fg-gutter);
+        text-align: center;
+        padding: 20px 10px;
+        opacity: 0.6;
+      }
+
+
+      .cm-activeline-flash {
+        background: var(--bg-matchhighlight) !important;
+        transition: background 0.9s ease-out;
+      }
+
     </style>
   </head>
   <body class="tema-claro">
 
     <button type="button" class="collapsible" onclick="traslape()">⚙️</button>
+
+    <!-- PANEL ÁRBOL DE FUNCIONES -->
+    <div id="panelArbol">
+      <div id="panelArbol-header">
+        <span>📑 ÍNDICE</span>
+        <button type="button" class="bottonV2" onclick="cerrarArbol()" title="Cerrar">✖️</button>
+      </div>
+      <input id="panelArbol-buscar" type="text" placeholder="Filtrar…"
+             oninput="filtrarArbol(this.value)">
+      <div id="panelArbol-count"></div>
+      <div id="panelArbol-scroll">
+        <div class="arbol-vacio" id="arbol-vacio">Sin funciones detectadas</div>
+        <div id="arbol-lista"></div>
+      </div>
+    </div>
+
 
     <div class="menuFullPantalla">
       <div class="botones">
@@ -533,7 +675,8 @@
         <button type="button" class="bottonV2" onclick="ejecutarArchivo()">▶️</button>
         <button type="button" class="bottonV2" onclick="guardarAlportapapeles()">📃</button>      
         <button type="button" class="bottonV2" onclick="formatearCodigo()">✨</button>
-        <button type="button" class="bottonV2" onclick="abrirMenuReemplazar()">✏️</button>      
+        <button type="button" class="bottonV2" onclick="abrirMenuReemplazar()">✏️</button>
+        <button type="button" class="bottonV2" onclick="toggleArbol()" title="Índice de funciones">📑</button>
 
       </div>
     </div>
@@ -543,7 +686,7 @@
     <div id="menuReemplazar">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
         <strong>✏️ Buscar y reemplazar</strong>
-        <button type="button" class="bottonV2" onclick="cerrarMenuReemplazar()" title="Cerrar">✖️</button>
+        <button type="button" class="bottonV2" onclick="cerrarMenuReemplazar()" title="Cerrar">✖️</button>      
       </div>
 
       <!-- FASE 1: buscar -->
@@ -999,8 +1142,8 @@
           const gutter = document.createElement("span");
           gutter.className = "diff-gutter";
           gutter.textContent = item.type === "added"   ? (item.lineB || "")
-                             : item.type === "removed" ? (item.lineA || "")
-                             : (item.lineA || "");
+          : item.type === "removed" ? (item.lineA || "")
+          : (item.lineA || "");
 
           const sign = document.createElement("span");
           sign.className = "diff-sign";
@@ -1211,6 +1354,188 @@
 
 
       /* ============================================================
+         PANEL ÁRBOL DE FUNCIONES
+      ============================================================ */
+      let _arbolVisible  = false;
+      let _arbolDebounce = null;
+      let _filaActiva    = null;
+      let _todasFilas    = []; // cache para filtrar sin re-parsear
+
+      // Colores por tipo
+      const ARBOL_COLORES = {
+        "function": "#007bff",
+        "class":    "#c05621",
+        "const":    "#2e8b57",
+        "method":   "#9a7010",
+      };
+
+      function toggleArbol() {
+        _arbolVisible ? cerrarArbol() : abrirArbol();
+      }
+
+      function abrirArbol() {
+        _arbolVisible = true;
+        document.getElementById("panelArbol").classList.add("abierto");
+        document.getElementById("panelArbol-buscar").value = "";
+        parsearYRenderArbol();
+      }
+
+      function cerrarArbol() {
+        _arbolVisible = false;
+        document.getElementById("panelArbol").classList.remove("abierto");
+      }
+
+      /* ---- Parser de funciones ---- */
+      function parsearFunciones() {
+        const lineCount = editor.lineCount();
+        const items     = [];
+
+        // Regex de primer nivel (sin indentación inicial)
+        const RE_FUNC    = /^function\s+([\w$]+)\s*\(/;
+        const RE_CLASS   = /^class\s+([\w$]+)/;
+        const RE_CONST_F = /^(?:const|let|var)\s+([\w$]+)\s*=\s*(?:async\s+)?function/;
+        const RE_CONST_A = /^(?:const|let|var)\s+([\w$]+)\s*=\s*(?:async\s+)?\(/;
+        const RE_CONST_A2= /^(?:const|let|var)\s+([\w$]+)\s*=\s*(?:async\s+)?[\w$]+\s*=>/;
+        const RE_METHOD  = /^\s{2,}(?:async\s+)?([\w$]+)\s*\([^)]*\)\s*\{/;
+
+        let dentroDeClase   = false;
+        let llaveClase      = 0;
+
+        for (let i = 0; i < lineCount; i++) {
+          const linea = editor.getLine(i);
+          if (linea === undefined) continue;
+
+          // Detectar fin de clase por balance de llaves
+          if (dentroDeClase) {
+            llaveClase += (linea.match(/\{/g)||[]).length;
+            llaveClase -= (linea.match(/\}/g)||[]).length;
+            if (llaveClase <= 0) dentroDeClase = false;
+
+            // Métodos internos de la clase (indentados)
+            const mMethod = linea.match(RE_METHOD);
+            if (mMethod && mMethod[1] !== "if" && mMethod[1] !== "for" &&
+                mMethod[1] !== "while" && mMethod[1] !== "switch") {
+              items.push({ tipo:"method", nombre: mMethod[1], linea: i });
+            }
+            continue;
+          }
+
+          // Primer nivel: líneas sin indentación O con indentación corta (dentro de <script>)
+          // Se detecta función si la línea después de quitar espacios iniciales hace match
+          const lineaTrim = linea.trimStart();
+
+          const mFunc  = lineaTrim.match(RE_FUNC);
+          const mClass = lineaTrim.match(RE_CLASS);
+          const mCF    = lineaTrim.match(RE_CONST_F);
+          const mCA    = lineaTrim.match(RE_CONST_A);
+          const mCA2   = lineaTrim.match(RE_CONST_A2);
+
+          if (mFunc) {
+            items.push({ tipo:"function", nombre: mFunc[1], linea: i });
+          } else if (mClass) {
+            items.push({ tipo:"class", nombre: mClass[1], linea: i });
+            dentroDeClase = true;
+            llaveClase    = (linea.match(/\{/g)||[]).length;
+          } else if (mCF) {
+            items.push({ tipo:"const", nombre: mCF[1], linea: i });
+          } else if (mCA || mCA2) {
+            const nombre = mCA ? mCA[1] : mCA2[1];
+            items.push({ tipo:"const", nombre, linea: i });
+          }
+        }
+        return items;
+      }
+
+      /* ---- Render del árbol ---- */
+      function parsearYRenderArbol() {
+        _todasFilas = parsearFunciones();
+        filtrarArbol(document.getElementById("panelArbol-buscar").value || "");
+      }
+
+      function filtrarArbol(q) {
+        const lista   = document.getElementById("arbol-lista");
+        const vacio   = document.getElementById("arbol-vacio");
+        const count   = document.getElementById("panelArbol-count");
+        lista.innerHTML = "";
+        _filaActiva = null;
+
+        const qLow     = q.trim().toLowerCase();
+        const filtrados = qLow
+        ? _todasFilas.filter(it => it.nombre.toLowerCase().includes(qLow))
+        : _todasFilas;
+
+        count.textContent = `${filtrados.length} símbolo${filtrados.length !== 1 ? "s" : ""}`;
+
+        if (!filtrados.length) {
+          vacio.style.display = "block";
+          return;
+        }
+        vacio.style.display = "none";
+
+        filtrados.forEach(item => {
+          const fila = document.createElement("div");
+          fila.className = `arbol-fila tipo-${item.tipo}`;
+          fila.dataset.linea = item.linea;
+
+          const punto = document.createElement("span");
+          punto.className = "arbol-punto";
+          punto.style.background = ARBOL_COLORES[item.tipo] || "#888";
+
+          const nombre = document.createElement("span");
+          nombre.className = "arbol-nombre";
+          // Resaltar coincidencia
+          if (qLow && item.nombre.toLowerCase().includes(qLow)) {
+            const idx = item.nombre.toLowerCase().indexOf(qLow);
+            nombre.innerHTML =
+              escapeHtml(item.nombre.slice(0, idx)) +
+              `<mark style="background:var(--bg-matchhighlight);border-radius:2px;">${escapeHtml(item.nombre.slice(idx, idx + qLow.length))}</mark>` +
+              escapeHtml(item.nombre.slice(idx + qLow.length));
+          } else {
+            nombre.textContent = item.nombre;
+          }
+
+          const lineaEl = document.createElement("span");
+          lineaEl.className = "arbol-linea";
+          lineaEl.textContent = `L${item.linea + 1}`;
+
+          fila.appendChild(punto);
+          fila.appendChild(nombre);
+          fila.appendChild(lineaEl);
+
+          fila.addEventListener("click", () => navegarALinea(item.linea, fila));
+          lista.appendChild(fila);
+        });
+      }
+
+      function navegarALinea(lineaIdx, filaEl) {
+        // Quitar activa anterior
+        if (_filaActiva) _filaActiva.classList.remove("activa");
+        _filaActiva = filaEl;
+        filaEl.classList.add("activa");
+
+        // Mover cursor y scroll en CodeMirror
+        editor.setCursor({ line: lineaIdx, ch: 0 });
+        editor.scrollIntoView({ line: lineaIdx, ch: 0 }, 120);
+        editor.focus();
+
+        // Flash de la línea
+        const mark = editor.addLineClass(lineaIdx, "background", "cm-activeline-flash");
+        setTimeout(() => editor.removeLineClass(lineaIdx, "background", "cm-activeline-flash"), 900);
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      /* ---- Reparsear al cambiar el código (debounce 800ms) ---- */
+      editor.on("changes", () => {
+        if (!_arbolVisible) return;
+        clearTimeout(_arbolDebounce);
+        _arbolDebounce = setTimeout(parsearYRenderArbol, 800);
+      });
+
+
+      /* ============================================================
          HTML POR DEFECTO
       ============================================================ */
       function htmlPorDefecto() {
@@ -1222,8 +1547,8 @@
   <title>Documento por defecto</title>
   <style>
     /* Aquí puedes escribir estilos CSS iniciales */
-  </style>
-</head>
+      </style>
+      </head>
 <body>
   <h1>Bienvenido al EditorVisor</h1>
   <p>Este es un documento HTML cargado por defecto.</p>
@@ -1234,6 +1559,7 @@
 <\/html>
 `;
       }
+
 
       /* ============================================================
          INIT
