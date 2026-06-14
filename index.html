@@ -1971,9 +1971,9 @@ REGLAS IMPORTANTES para bloques JS:
           let fetchUrl, fetchOpts, parsearDelta;
 
           // Añadir mensaje usuario al historial UNA SOLA VEZ para todos los modelos
-        _claudeHistorial.push({ role: "user", content: contenidoUsuario });
+          _claudeHistorial.push({ role: "user", content: contenidoUsuario });
 
-        if (_claudeModelo === "claude") {
+          if (_claudeModelo === "claude") {
             fetchUrl  = cloudflareProxy;
             fetchOpts = {
               method: "POST",
@@ -2010,19 +2010,33 @@ REGLAS IMPORTANTES para bloques JS:
             };
             parsearDelta = (obj) => obj.choices?.[0]?.delta?.content || "";
 
-          } else { // gemini
-            // El historial ya incluye el último mensaje user, convertir sin duplicar
-            const historialGemini = _claudeHistorial.map(m => ({
+          }  else { // gemini
+            const historialGemini = _claudeHistorial.slice(0, -1).map(m => ({
               role: m.role === "assistant" ? "model" : "user",
               parts: [{ text: m.content }]
             }));
-            fetchUrl  = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${APIKeyGemini}`;
+
+            // Agregar el mensaje actual aparte, con la instrucción de formato pegada
+            const instruccionFormato = `\n\n[FORMATO OBLIGATORIO: Usa SIEMPRE <!-- js --> ... <!-- fin --> para JS, <!-- html --> ... <!-- fin --> para HTML, <!-- css --> ... <!-- fin --> para CSS. Para funciones JS usa <!-- js inicio funcion --> y <!-- js fin funcion --> dentro del bloque. Para variables globales usa <!-- js inicio variable gobales --> y <!-- js fin variables -->. NUNCA uses comillas triples ni bloques markdown.]`;
+
+            historialGemini.push({
+              role: "user",
+              parts: [{ text: contenidoUsuario + instruccionFormato }]
+            });
+
+            fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/${_geminiModelo}:streamGenerateContent?alt=sse&key=${APIKeyGemini}`;
             fetchOpts = {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                system_instruction: { parts: [{ text: IARoll }] },
-                contents: historialGemini
+                system_instruction: {
+                  parts: [{ text: IARoll }]
+                },
+                contents: historialGemini,
+                generationConfig: {
+                  temperature: 0.7,
+                  maxOutputTokens: 8192
+                }
               })
             };
             parsearDelta = (obj) => obj.candidates?.[0]?.content?.parts?.[0]?.text || "";
@@ -2158,14 +2172,14 @@ REGLAS IMPORTANTES para bloques JS:
 
             // Normalizar variaciones del modelo (espacios extra, mayúsculas)
             const textoNorm = texto
-              .replace(/<!--\s*js\s*-->/gi,   '<!-- js -->')
-              .replace(/<!--\s*html\s*-->/gi, '<!-- html -->')
-              .replace(/<!--\s*css\s*-->/gi,  '<!-- css -->')
-              .replace(/<!--\s*fin\s*-->/gi,  '<!-- fin -->')
-              .replace(/<!--\s*js\s+inicio\s+funcion\s*-->/gi,          '<!-- js inicio funcion -->')
-              .replace(/<!--\s*js\s+fin\s+funcion\s*-->/gi,             '<!-- js fin funcion -->')
-              .replace(/<!--\s*js\s+inicio\s+variable[s]?\s+gobales?\s*-->/gi, '<!-- js inicio variable gobales -->')
-              .replace(/<!--\s*js\s+fin\s+variables?\s*-->/gi,          '<!-- js fin variables -->');
+            .replace(/<!--\s*js\s*-->/gi,   '<!-- js -->')
+            .replace(/<!--\s*html\s*-->/gi, '<!-- html -->')
+            .replace(/<!--\s*css\s*-->/gi,  '<!-- css -->')
+            .replace(/<!--\s*fin\s*-->/gi,  '<!-- fin -->')
+            .replace(/<!--\s*js\s+inicio\s+funcion\s*-->/gi,          '<!-- js inicio funcion -->')
+            .replace(/<!--\s*js\s+fin\s+funcion\s*-->/gi,             '<!-- js fin funcion -->')
+            .replace(/<!--\s*js\s+inicio\s+variable[s]?\s+gobales?\s*-->/gi, '<!-- js inicio variable gobales -->')
+            .replace(/<!--\s*js\s+fin\s+variables?\s*-->/gi,          '<!-- js fin variables -->');
 
             // Procesar bloques <!-- lang --> ... <!-- fin -->
             const RE_BLOQUE = /(<!-- (?:js|html|css) -->[\s\S]*?<!-- fin -->)/g;
