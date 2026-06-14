@@ -1025,6 +1025,7 @@
         <div id="configAcciones">
           <button onclick="guardarConfig()">💾 Guardar</button>
           <button onclick="limpiarConfig()">🗑️ Limpiar</button>
+          <button onclick="resetearIARoll()">↩️ Reset Prompt</button>
         </div>
 
         <div id="configEstado">Sin cambios</div>
@@ -1116,14 +1117,46 @@
     <script>
 
      
+      const IARollDefault = `Eres un asistente experto en desarrollo web integrado en un IDE llamado EditorVisorIDE. El usuario trabaja principalmente con HTML, CSS y JavaScript de archivo único. Responde de forma concisa y práctica.
+
+Cuando muestres código usa los siguientes formatos de bloque según el lenguaje:
+
+Para JS:
+<!-- js -->
+código aquí
+<!-- fin -->
+
+Para HTML:
+<!-- html -->
+código aquí
+<!-- fin -->
+
+Para CSS:
+<!-- css -->
+código aquí
+<!-- fin -->
+
+REGLAS IMPORTANTES para bloques JS:
+- Si el bloque contiene funciones, encierra cada una entre <!-- js inicio funcion --> y <!-- js fin funcion -->
+- Si el bloque contiene variables/constantes globales, enciérralas entre <!-- js inicio variable gobales --> y <!-- js fin variables -->
+- Estos delimitadores van en su propia línea, DENTRO del bloque.
+- Nunca omitas los delimitadores en código JS.
+- Para HTML y CSS puedes usar bloques markdown normales.`;
+
       let APIKeyAnthropic = '';
       let APIKeyGemini    = '';
       let APIKeyDeepSeek  = '';
-      let IARoll          = 'Eres un asistente experto en desarrollo web integrado en un IDE llamado EditorVisorIDE. El usuario trabaja principalmente con HTML, CSS y JavaScript de archivo único. Responde de forma concisa y práctica. Cuando muestres código usa bloques de código markdown.';
+      let IARoll          = IARollDefault;
       let cloudflareProxy = 'https://shiny-bread-e818.gx0112358.workers.dev/claude';
       let KV_BASE         = 'https://shiny-bread-e818.gx0112358.workers.dev';
       const CFG_KEY       = '_ide_config_v1';
 
+      function resetearIARoll() {
+        document.getElementById("cfg-iaroll").value = IARollDefault;
+        document.getElementById("configEstado").textContent = "↩️ Prompt restablecido — presiona Guardar para aplicar";
+        document.getElementById("configEstado").style.color = "#fab387";
+      }
+      
       function cargarConfig() {
         try {
           const cfg = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
@@ -1980,12 +2013,14 @@
           burbujaAsistente.classList.remove("claude-cursor");
                     
           if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
            
           _claudeHistorial.push({ role: "assistant", content: textoRespuesta });      
         
         } catch(err) {
           burbujaAsistente.classList.remove("claude-cursor");
           if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
            
           burbujaAsistente.textContent = `❌ Error: ${err.message}`;
           burbujaAsistente.style.borderColor = "#f38ba8";
@@ -2015,10 +2050,12 @@
         let textoRespuesta = "";
         let _lastRender = 0;
 
+        const instruccionFormato = `\n\n[FORMATO OBLIGATORIO: Usa SIEMPRE <!-- js --> ... <!-- fin --> para JS, <!-- html --> ... <!-- fin --> para HTML, <!-- css --> ... <!-- fin --> para CSS. Para funciones JS usa <!-- js inicio funcion --> y <!-- js fin funcion --> dentro del bloque. Para variables globales usa <!-- js inicio variable gobales --> y <!-- js fin variables -->. NUNCA uses comillas triples ni bloques markdown.]`;
+
         const mensajes = [
           { role: "system", content: IARoll },   
           ..._claudeHistorial,
-          { role: "user", content: contenidoUsuario }
+          { role: "user", content: contenidoUsuario + instruccionFormato }
         ];
 
         try {
@@ -2074,6 +2111,7 @@
 
           burbujaAsistente.classList.remove("claude-cursor");
           if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
            
           _claudeHistorial.push({ role: "user",      content: contenidoUsuario });
           _claudeHistorial.push({ role: "assistant", content: textoRespuesta   });
@@ -2081,6 +2119,7 @@
         } catch(err) {
           burbujaAsistente.classList.remove("claude-cursor");
           if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
            
           burbujaAsistente.textContent = `❌ Error: ${err.message}`;
           burbujaAsistente.style.borderColor = "#f38ba8";
@@ -2168,6 +2207,7 @@
 
           burbujaAsistente.classList.remove("claude-cursor");
           if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
            
           _claudeHistorial.push({ role: "user",      content: contenidoUsuario });
           _claudeHistorial.push({ role: "assistant", content: textoRespuesta   });
@@ -2175,6 +2215,7 @@
         } catch(err) {
           burbujaAsistente.classList.remove("claude-cursor");
           if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
            
           burbujaAsistente.textContent = `❌ Error: ${err.message}`;
           burbujaAsistente.style.borderColor = "#f38ba8";
@@ -2234,10 +2275,95 @@
               .then(() => { btnCopiar.textContent="✅"; setTimeout(()=>btnCopiar.textContent="📋",1500); })
               .catch(()=>{});
           };
-          burbuja._btnCopiar = btnCopiar; // referencia para mostrarlo post-stream
+          burbuja._btnCopiar = btnCopiar;
           msg.appendChild(btnCopiar);
 
-           
+          // Botón Smart
+          const btnSmart = document.createElement("button");
+          btnSmart.textContent = "⚡ Smart";
+          btnSmart.title = "Separar bloques por delimitadores";
+          btnSmart.style.cssText = `
+            background:none; border:1px solid #45475a; border-radius:4px;
+            color:#6c7086; font-size:10px; padding:2px 6px; margin-top:4px; margin-left:4px;
+            cursor:pointer; align-self:flex-start; display:${vacia ? "none" : "inline-block"};
+            transition:color .15s, border-color .15s;
+          `;
+          btnSmart.onmouseenter = () => { btnSmart.style.color="#cba6f7"; btnSmart.style.borderColor="#cba6f7"; };
+          btnSmart.onmouseleave = () => { btnSmart.style.color="#6c7086"; btnSmart.style.borderColor="#45475a"; };
+          btnSmart.onclick = () => {
+            const texto = burbuja.value || burbuja.textContent || "";
+            if (!texto.trim()) return;
+
+            const yaExiste = msg.querySelector(".smart-render");
+            if (yaExiste) { yaExiste.remove(); btnSmart.textContent = "⚡ Smart"; return; }
+            btnSmart.textContent = "✖️ Cerrar";
+
+            const smartDiv = document.createElement("div");
+            smartDiv.className = "smart-render";
+            smartDiv.style.cssText = "margin-top:8px;display:flex;flex-direction:column;gap:6px;";
+
+            // Procesar bloques <!-- lang --> ... <!-- fin -->
+            const RE_BLOQUE = /(<!-- (?:js|html|css) -->[\s\S]*?<!-- fin -->)/g;
+            const partes = texto.split(RE_BLOQUE);
+            partes.forEach(parte => {
+              const matchLang = parte.match(/^<!-- (js|html|css) -->/);
+              if (matchLang) {
+                const lang           = matchLang[1];
+                const lineas         = parte.split("\n");
+                const contenidoTotal = lineas.slice(1, -1).join("\n");
+
+                // Buscar delimitadores internos (solo en JS)
+                const RE_ALL = /<!-- js inicio (funcion|variable gobales) -->([\s\S]*?)<!-- js fin (?:funcion|variables) -->/g;
+                const secciones = [];
+                let m;
+                while ((m = RE_ALL.exec(contenidoTotal)) !== null) {
+                  const tipo = m[1] === "funcion" ? "⚡ Función" : "📦 Variables";
+                  secciones.push({ tipo, contenido: m[2].trim() });
+                }
+
+                const items = secciones.length > 0
+                  ? secciones
+                  : [{ tipo: lang, contenido: contenidoTotal.trim() }];
+
+                items.forEach(sec => {
+                  const wrap = document.createElement("div");
+                  wrap.style.cssText = "border-radius:6px;overflow:hidden;border:1px solid #45475a;";
+                  const hdr = document.createElement("div");
+                  hdr.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:4px 10px;background:#181825;font-size:10px;color:#6c7086;";
+                  hdr.innerHTML = `<span>${sec.tipo}${sec.tipo !== lang ? ' · ' + lang : ''}</span>`;
+                  const btnC = document.createElement("button");
+                  btnC.textContent = "📋 Copiar";
+                  btnC.style.cssText = "background:none;border:1px solid #45475a;border-radius:4px;color:#6c7086;font-size:10px;padding:2px 8px;cursor:pointer;transition:color .15s,border-color .15s;";
+                  btnC.onmouseenter = () => { btnC.style.color="#cba6f7"; btnC.style.borderColor="#cba6f7"; };
+                  btnC.onmouseleave = () => { btnC.style.color="#6c7086"; btnC.style.borderColor="#45475a"; };
+                  btnC.onclick = () => {
+                    navigator.clipboard.writeText(sec.contenido)
+                      .then(()=>{ btnC.textContent="✅ Copiado"; setTimeout(()=>btnC.textContent="📋 Copiar",1500); })
+                      .catch(()=>{});
+                  };
+                  hdr.appendChild(btnC);
+                  const ta = document.createElement("textarea");
+                  ta.value = sec.contenido;
+                  ta.style.cssText = "width:100%;min-height:60px;background:#11111b;color:#cdd6f4;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;padding:10px;border:none;outline:none;resize:vertical;box-sizing:border-box;field-sizing:content;";
+                  wrap.appendChild(hdr);
+                  wrap.appendChild(ta);
+                  smartDiv.appendChild(wrap);
+                });
+
+              } else if (parte.trim()) {
+                // Texto plano entre bloques
+                const p = document.createElement("div");
+                p.style.cssText = "font-size:12px;line-height:1.6;color:#cdd6f4;padding:4px 2px;white-space:pre-wrap;word-break:break-word;";
+                p.textContent = parte.trim();
+                smartDiv.appendChild(p);
+              }
+            });
+
+            msg.appendChild(smartDiv);
+            document.getElementById("claudeChat").scrollTop = document.getElementById("claudeChat").scrollHeight;
+          };
+          burbuja._btnSmart = btnSmart;
+          msg.appendChild(btnSmart);
         }
 
         chat.appendChild(msg);
