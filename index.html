@@ -6,8 +6,6 @@
 
     <title>EditorVisorIDE</title>
 
-
-
     <!-- Manifest -->
     <link rel="manifest" href="manifest.json">
 
@@ -18,8 +16,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="IDEApp">
     <link rel="apple-touch-icon" href="icono.jpg">
-
-
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
@@ -45,13 +41,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/format/formatting.min.js"></script>
 
+    <!-- JSZip para exportar backups y auto-ZIP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
     <style>
 
       /* ============================================================
-      VARIABLES DE TEMA — Se sobreescriben por clase en body
+      VARIABLES DE TEMA
       ============================================================ */
 
-      /* ----- TEMA CLARO (tu estilo original) ----- */
       body.tema-claro {
         --bg-editor:        #ffffff;
         --fg-editor:        #000000;
@@ -85,59 +83,41 @@
         --autosave-color:   #ffeb3b;
       }
 
-
-      /* ----- TEMA CLAUDE / ADAPTADO A FONDO BLANCO ----- */
       body.tema-claude {
-        /* 🎨 Fondo y texto principal */
-        --bg-body:          #ffffff;   /* Fondo general blanco */
-        --bg-editor:        #ffffff;   /* Fondo del área de código */
-        --fg-editor:        #000000;   /* Texto negro */
-
-        /* 🔑 Sintaxis del código */
-        --color-keyword:    #d69fd5;   /* Lavanda — palabras clave */
-        --color-string:     #2e8b57;   /* Verde menta — cadenas */
-        --color-number:     #fab387;   /* Melocotón — números */
-        --color-comment:    #6c7086;   /* Gris azulado — comentarios */
-        --color-variable:   #DAA520;   /* Dorado mostaza — variables */
-        --color-def:        #89b4fa;   /* Azul claro — funciones */
-
-        /* 📑 Gutter y resaltados */
-        --bg-gutter:        #f0f0f0;   /* Gris claro */
-        --fg-gutter:        #555555;   /* Gris medio */
-        --bg-activeline:    #e8f0fe;   /* Azul muy claro para línea activa */
-        --bg-selection:     #b3d4fc;   /* Azul claro para selección */
-        --bg-matchhighlight:#ffff99;   /* Amarillo suave para coincidencias */
-        --bg-varhighlight:  #cceeff;   /* Azul claro para variables resaltadas */
-        --border-matching:  #89b4fa;   /* Azul claro para coincidencias */
-        --fold-color:       #cba6f7;   /* Lavanda para plegado */
-
-        /* 🖱️ Menús y botones */
-        --bg-menu:          linear-gradient(135deg,
-          rgba(153,102,204,0.9) 0%,
-          rgba(153,102,204,0.7) 50%,
-          rgba(0,120,215,0.6) 100%); /* degradado lavanda/azul */
-        --border-menu:      #cba6f7;   /* Lavanda */
-        --color-menu-text:  #000000;   /* Texto negro para contraste */
-        --bg-button:        #c0c0c0;   /* Gris claro */
-        --fg-button:        #000000;   /* Texto negro */
-        --bg-button-hover:  #a9a9a9;   /* Gris más oscuro al pasar */
-
-        /* 🔤 Inputs y selects */
-        --bg-input:         #ffffff;   /* Fondo blanco */
-        --fg-input:         #000000;   /* Texto negro */
-        --border-input:     #cba6f7;   /* Lavanda */
-        --bg-select:        #ffffff;   /* Fondo blanco */
-        --fg-select:        #333333;   /* Texto gris oscuro */
-
-        /* 💾 AutoGuardado */
-        --autosave-bg:      rgba(0,0,0,0.6); /* Negro semi-transparente */
-        --autosave-color:   #a6e3a1;   /* Verde menta */
+        --bg-body:          #ffffff;
+        --bg-editor:        #ffffff;
+        --fg-editor:        #000000;
+        --color-keyword:    #d69fd5;
+        --color-string:     #2e8b57;
+        --color-number:     #fab387;
+        --color-comment:    #6c7086;
+        --color-variable:   #DAA520;
+        --color-def:        #89b4fa;
+        --bg-gutter:        #f0f0f0;
+        --fg-gutter:        #555555;
+        --bg-activeline:    #e8f0fe;
+        --bg-selection:     #b3d4fc;
+        --bg-matchhighlight:#ffff99;
+        --bg-varhighlight:  #cceeff;
+        --border-matching:  #89b4fa;
+        --fold-color:       #cba6f7;
+        --bg-menu:          linear-gradient(135deg,rgba(153,102,204,0.9) 0%,rgba(153,102,204,0.7) 50%,rgba(0,120,215,0.6) 100%);
+        --border-menu:      #cba6f7;
+        --color-menu-text:  #000000;
+        --bg-button:        #c0c0c0;
+        --fg-button:        #000000;
+        --bg-button-hover:  #a9a9a9;
+        --bg-input:         #ffffff;
+        --fg-input:         #000000;
+        --border-input:     #cba6f7;
+        --bg-select:        #ffffff;
+        --fg-select:        #333333;
+        --autosave-bg:      rgba(0,0,0,0.6);
+        --autosave-color:   #a6e3a1;
       }
 
-
-
       /* ============================================================
-      ESTILOS GLOBALES (usan variables)
+      ESTILOS GLOBALES
       ============================================================ */
 
       body {
@@ -151,13 +131,8 @@
         transition: background-color 0.3s;
       }
 
-      #editor {
-        height: 100%;
-        width: 100vw;
-        border: none;
-      }
+      #editor { height: 100%; width: 100vw; border: none; }
 
-      /* ---- CodeMirror base ---- */
       .CodeMirror {
         font-family: 'JetBrains Mono', monospace;
         background-color: var(--bg-editor) !important;
@@ -175,27 +150,19 @@
         border-right: 1px solid var(--bg-selection) !important;
       }
 
-      .CodeMirror-linenumber {
-        color: var(--fg-gutter) !important;
-      }
+      .CodeMirror-linenumber        { color: var(--fg-gutter) !important; }
+      .CodeMirror-activeline-background { background: var(--bg-activeline) !important; }
 
-      .CodeMirror-activeline-background {
-        background: var(--bg-activeline) !important;
-      }
-
-      /* ---- Sintaxis (variables) ---- */
       .cm-keyword  { color: var(--color-keyword)  !important; font-weight: bold; }
       .cm-string   { color: var(--color-string)   !important; }
       .cm-number   { color: var(--color-number)   !important; }
       .cm-comment  { color: var(--color-comment)  !important; font-style: italic; }
       .cm-variable { color: var(--color-variable) !important; }
       .cm-def      { color: var(--color-def)      !important; }
-
-      /* Tags HTML */
       .cm-tag      { color: var(--color-keyword)  !important; font-weight: bold; }
       .cm-attribute{ color: var(--color-def)      !important; }
+      .cm-property { color: #1E90FF !important; font-weight: normal; }
 
-      /* ---- Highlights ---- */
       .cm-variable-highlight {
         background-color: var(--bg-varhighlight);
         color: var(--fg-editor) !important;
@@ -203,46 +170,16 @@
         border-radius: 3px;
       }
 
-      .CodeMirror .cm-matchhighlight {
-        background-color: var(--bg-matchhighlight);
-        color: inherit;
-      }
+      .CodeMirror .cm-matchhighlight  { background-color: var(--bg-matchhighlight); color: inherit; }
+      .CodeMirror-matchingbracket     { background-color: var(--border-matching) !important; color: var(--fg-editor) !important; font-weight: bold; }
+      .CodeMirror-nonmatchingbracket  { background-color: #f38ba8 !important; color: #1e1e2e !important; }
+      .CodeMirror-selected            { background: var(--bg-selection) !important; }
 
-      .CodeMirror-matchingbracket {
-        background-color: var(--border-matching) !important;
-        color: var(--fg-editor) !important;
-        font-weight: bold;
-      }
-
-      .CodeMirror-nonmatchingbracket {
-        background-color: #f38ba8 !important;
-        color: #1e1e2e !important;
-      }
-
-      .CodeMirror-selected {
-        background: var(--bg-selection) !important;
-      }
-
-      /* ---- Fold ---- */
-      .CodeMirror-foldmarker {
-        font-size: 12px;
-        color: var(--fold-color);
-        font-weight: bold;
-        cursor: pointer;
-        padding: 0 4px;
-      }
-
-      .cm-property {
-        color: #1E90FF !important; /* Azul electrónico (DodgerBlue) */
-        font-weight: normal;
-      }
-
+      .CodeMirror-foldmarker { font-size: 12px; color: var(--fold-color); font-weight: bold; cursor: pointer; padding: 0 4px; }
       .CodeMirror-foldgutter { width: 15px; }
-
       .CodeMirror-foldgutter-open:after   { content: "▷"; font-size: 10px; cursor: pointer; }
       .CodeMirror-foldgutter-folded:after { content: "⨭"; font-size: 10px; cursor: pointer; }
 
-      /* ---- Scroll ---- */
       .CodeMirror-scroll::-webkit-scrollbar        { width: 8px; height: 8px; }
       .CodeMirror-scroll::-webkit-scrollbar-track  { background: var(--bg-gutter); }
       .CodeMirror-scroll::-webkit-scrollbar-thumb  { background: var(--fg-gutter); border-radius: 4px; }
@@ -282,44 +219,23 @@
         transition: background 0.3s, border-color 0.3s;
       }
 
-
       .bottonV2 {
-        background: none;       /* sin fondo */
-        border: none;           /* sin borde */
-        padding: 0;             /* sin relleno */
-        margin: 0;
-        font-size: 20px;        /* tamaño del emoji */
-        line-height: 1;
-        cursor: pointer;
-        color: inherit;         /* usa el color natural del emoji */
-        transition: transform 0.2s, opacity 0.2s;
-      }
-
-      .bottonV2:hover {
-        transform: scale(1.2);  /* pequeño zoom al pasar */
-        opacity: 0.8;           /* efecto sutil */
-      }
-
-      /* 🔒 Evita que cambie al hacer click */
-      .bottonV2:active,
-      .bottonV2:focus {
         background: none;
         border: none;
+        padding: 0;
+        margin: 0;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
         color: inherit;
-        transform: none;        /* no cambia tamaño al presionar */
-        opacity: 1;             /* mantiene opacidad normal */
-        outline: none;          /* quita borde de enfoque */
+        transition: transform 0.2s, opacity 0.2s;
       }
+      .bottonV2:hover  { transform: scale(1.2); opacity: 0.8; }
+      .bottonV2:active,
+      .bottonV2:focus  { background: none; border: none; color: inherit; transform: none; opacity: 1; outline: none; }
 
+      .botones { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; }
 
-      .botones {
-        margin-top: 15px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      /* ---- Botones ---- */
       button {
         background-color: var(--bg-button);
         color: var(--fg-button);
@@ -331,18 +247,9 @@
         cursor: pointer;
         transition: background-color 0.3s, transform 0.2s;
       }
+      button:hover  { background-color: var(--bg-button-hover); transform: scale(1.05); }
+      button:active { background-color: #3e8e41; transform: scale(0.95); }
 
-      button:hover {
-        background-color: var(--bg-button-hover);
-        transform: scale(1.05);
-      }
-
-      button:active {
-        background-color: #3e8e41;
-        transform: scale(0.95);
-      }
-
-      /* ---- Selects ---- */
       select {
         font-size: 14px;
         width: auto;
@@ -357,7 +264,6 @@
         transition: background-color 0.3s, color 0.3s, border-color 0.3s;
       }
 
-      /* ---- Inputs ---- */
       input[type="text"] {
         font-family: 'JetBrains Mono', monospace;
         font-size: 14px;
@@ -370,20 +276,10 @@
         outline: none;
         transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s, color 0.3s;
       }
+      input[type="text"]:focus { border-color: var(--fold-color); box-shadow: 0 0 4px rgba(0,120,215,0.5); }
 
-      input[type="text"]:focus {
-        border-color: var(--fold-color);
-        box-shadow: 0 0 4px rgba(0,120,215,0.5);
-      }
+      #temaSelector { min-width: 110px; font-weight: bold; letter-spacing: 0.03em; }
 
-      /* ---- Selector de tema — etiqueta visual ---- */
-      #temaSelector {
-        min-width: 110px;
-        font-weight: bold;
-        letter-spacing: 0.03em;
-      }
-
-      /* ---- Mensaje autosave ---- */
       #autosaveMsg {
         position: fixed;
         bottom: 10px;
@@ -397,8 +293,6 @@
         z-index: 9999;
         transition: background 0.3s, color 0.3s;
       }
-
-
 
       /* ============================================================
       MENÚ REEMPLAZAR CÓDIGO
@@ -423,7 +317,7 @@
 
       #menuReemplazar textarea {
         width: 100%;
-        height: 110px;
+        height: 90px;
         font-family: 'JetBrains Mono', monospace;
         font-size: 12px;
         border-radius: 6px;
@@ -435,12 +329,7 @@
         box-sizing: border-box;
       }
 
-      #menuReemplazar label {
-        font-size: 12px;
-        font-weight: bold;
-        margin-bottom: 2px;
-        display: block;
-      }
+      #menuReemplazar label { font-size: 12px; font-weight: bold; margin-bottom: 2px; display: block; }
 
       #estadoBusqueda {
         font-size: 12px;
@@ -449,27 +338,141 @@
         text-align: center;
         display: none;
       }
+      #estadoBusqueda.encontrado    { background: rgba(0,180,0,0.25); color: #006600; border: 1px solid #006600; }
+      #estadoBusqueda.no-encontrado { background: rgba(200,0,0,0.2);  color: #990000; border: 1px solid #990000; }
 
-      #estadoBusqueda.encontrado {
-        background: rgba(0,180,0,0.25);
-        color: #006600;
-        border: 1px solid #006600;
-      }
+      #seccionNuevo { display: none; flex-direction: column; gap: 8px; }
 
-      #estadoBusqueda.no-encontrado {
-        background: rgba(200,0,0,0.2);
-        color: #990000;
-        border: 1px solid #990000;
-      }
-
-      #seccionNuevo {
+      /* ---- Navegación de ocurrencias ---- */
+      #navOcurrencias {
         display: none;
-        flex-direction: column;
-        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: bold;
+      }
+      #navOcurrencias button {
+        padding: 4px 10px;
+        font-size: 16px;
+        margin: 0;
+        min-width: 34px;
+      }
+      #contadorOcurrencias {
+        min-width: 60px;
+        text-align: center;
+        font-size: 12px;
       }
 
+      /* ============================================================
+      MODAL DIFF VISUAL
+      ============================================================ */
+      #modalDiff {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        z-index: 99999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+      }
+      #modalDiff.visible { display: flex; }
 
+      #diffBox {
+        background: #1e1e2e;
+        color: #cdd6f4;
+        width: 90vw;
+        max-width: 860px;
+        height: 78vh;
+        border-radius: 10px;
+        border: 2px solid #cba6f7;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+      }
 
+      #diffHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 16px;
+        background: #181825;
+        border-bottom: 1px solid #45475a;
+        flex-shrink: 0;
+      }
+      #diffHeader strong { font-size: 14px; color: #cba6f7; }
+
+      #diffStats {
+        font-size: 11px;
+        display: flex;
+        gap: 12px;
+      }
+      #diffStats .added   { color: #a6e3a1; }
+      #diffStats .removed { color: #f38ba8; }
+      #diffStats .equal   { color: #a6adc8; }
+
+      #diffContent {
+        overflow-y: auto;
+        flex: 1;
+        padding: 8px 0;
+      }
+      #diffContent::-webkit-scrollbar        { width: 8px; }
+      #diffContent::-webkit-scrollbar-track  { background: #181825; }
+      #diffContent::-webkit-scrollbar-thumb  { background: #45475a; border-radius: 4px; }
+
+      .diff-line {
+        display: flex;
+        align-items: flex-start;
+        padding: 0 12px;
+        min-height: 18px;
+        line-height: 18px;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .diff-line.added   { background: rgba(166,227,161,0.13); color: #a6e3a1; }
+      .diff-line.removed { background: rgba(243,139,168,0.13); color: #f38ba8; }
+      .diff-line.equal   { color: #585b70; }
+
+      .diff-gutter {
+        width: 28px;
+        min-width: 28px;
+        text-align: right;
+        margin-right: 12px;
+        color: #45475a;
+        user-select: none;
+        font-size: 11px;
+      }
+      .diff-sign {
+        width: 14px;
+        min-width: 14px;
+        font-weight: bold;
+        margin-right: 6px;
+        user-select: none;
+      }
+      .diff-line.added   .diff-sign { color: #a6e3a1; }
+      .diff-line.removed .diff-sign { color: #f38ba8; }
+
+      #diffActions {
+        display: flex;
+        gap: 8px;
+        padding: 10px 16px;
+        background: #181825;
+        border-top: 1px solid #45475a;
+        flex-shrink: 0;
+      }
+      #diffActions button {
+        flex: 1;
+        padding: 8px;
+        font-size: 13px;
+        margin: 0;
+      }
+      #btnAplicarBackup { background: #a6e3a1; color: #1e1e2e; }
+      #btnAplicarBackup:hover { background: #7ec47e; }
+      #btnCerrarDiff    { background: #45475a; color: #cdd6f4; }
+      #btnCerrarDiff:hover { background: #585b70; }
 
     </style>
   </head>
@@ -489,7 +492,7 @@
           <option value=".json">*.json</option>
         </select>
 
-        <select id="backupSelector" onchange="aplicarBackup()">
+        <select id="backupSelector" onchange="mostrarDiffBackup()">
           <option value="">Ninguno</option>
         </select>
 
@@ -499,9 +502,9 @@
           <option value="undo">↩️ Deshacer</option>
           <option value="redo">↪️ Rehacer</option>
           <option value="limpiarBackups">🗑️ LocalStorage</option>
+          <option value="exportarZip">📦 Exportar backups ZIP</option>
           <option value="colapsar">➖ Contraer</option>
           <option value="expandir">➕ Expandir</option>
-
         </select>
 
         <select id="sizeSelector" onchange="cambiarTamaño()">
@@ -520,7 +523,6 @@
           <option value="'Courier New', monospace">Courier New</option>
         </select>
 
-        <!-- ✨ NUEVO: Selector de tema -->
         <select id="temaSelector" onchange="cambiarTema(this.value)">
           <option value="tema-claro">☀️ Claro</option>
           <option value="tema-claude">🌙 Claude</option>
@@ -554,13 +556,40 @@
       <!-- Estado de búsqueda -->
       <div id="estadoBusqueda"></div>
 
-      <!-- FASE 2: nuevo código (aparece solo si se encontró) -->
+      <!-- Navegación entre ocurrencias -->
+      <div id="navOcurrencias">
+        <button type="button" onclick="navegarOcurrencia(-1)" title="Anterior">⬆</button>
+        <span id="contadorOcurrencias">1 / 1</span>
+        <button type="button" onclick="navegarOcurrencia(1)" title="Siguiente">⬇</button>
+      </div>
+
+      <!-- FASE 2: nuevo código -->
       <div id="seccionNuevo">
         <label for="txtNuevo">🆕 Pega el código de reemplazo:</label>
         <textarea id="txtNuevo" placeholder="Pega aquí el nuevo código…"></textarea>
         <div style="display:flex;gap:8px;">
           <button type="button" onclick="ejecutarReemplazo()" style="flex:1;">✅ Reemplazar</button>
           <button type="button" onclick="reiniciarMenuReemplazar()" style="flex:1;">🔄 Nueva búsqueda</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- MODAL DIFF VISUAL -->
+    <div id="modalDiff">
+      <div id="diffBox">
+        <div id="diffHeader">
+          <strong>🔍 Diff — Backup vs Editor actual</strong>
+          <div id="diffStats">
+            <span class="added"   id="statAdded">+0</span>
+            <span class="removed" id="statRemoved">−0</span>
+            <span class="equal"   id="statEqual">≈0</span>
+          </div>
+        </div>
+        <div id="diffContent"></div>
+        <div id="diffActions">
+          <button id="btnAplicarBackup" type="button" onclick="aplicarBackupDesideDiff()">✅ Cargar este backup</button>
+          <button id="btnCerrarDiff"    type="button" onclick="cerrarDiff()">✖️ Cancelar</button>
         </div>
       </div>
     </div>
@@ -574,43 +603,38 @@
 
       /* ============================================================
          CAMBIO DE TEMA
-         ============================================================ */
+      ============================================================ */
       function cambiarTema(tema) {
         document.body.classList.remove("tema-claro", "tema-claude");
         document.body.classList.add(tema);
-
-        // Guardar preferencia
         try { localStorage.setItem("editorTema", tema); } catch(e) {}
-
-        // Refrescar editor para que CodeMirror repinte
         setTimeout(() => editor.refresh(), 50);
-
         mostrarEstado(tema === "tema-claude" ? "🌙 Tema Claude activado" : "☀️ Tema Claro activado");
       }
 
       /* ============================================================
          ACCIONES DEL MENÚ
-         ============================================================ */
+      ============================================================ */
       function ejecutarAccion(valor) {
         try {
           switch (valor) {
-            case "AutoGuardadoonoff": onoffAutoguardado();      break;
-            case "undo":             deshacer();                break;
-            case "redo":             rehacer();                 break;
-            case "limpiarBackups":   limpiarBackups();          break;
-            case "colapsar":         colapsarFunciones();       break;
-            case "expandir":         expandirFunciones();       break;
+            case "AutoGuardadoonoff": onoffAutoguardado();   break;
+            case "undo":             deshacer();             break;
+            case "redo":             rehacer();              break;
+            case "limpiarBackups":   limpiarBackups();       break;
+            case "exportarZip":      exportarBackupsZip();  break;
+            case "colapsar":         colapsarFunciones();    break;
+            case "expandir":         expandirFunciones();    break;
             default: break;
           }
         } finally {
-          // Siempre resetea el select, incluso si hubo error
           document.getElementById("menuAcciones").value = "";
         }
       }
 
       /* ============================================================
          INICIALIZACIÓN DEL EDITOR
-         ============================================================ */
+      ============================================================ */
       const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
         mode:            "htmlmixed",
         lineNumbers:     true,
@@ -628,7 +652,7 @@
 
       /* ============================================================
          FUNCIONES DE EDICIÓN
-         ============================================================ */
+      ============================================================ */
       function cambiarTamaño() {
         const tamaño = document.getElementById("sizeSelector").value;
         editor.getWrapperElement().style.fontSize = tamaño + "px";
@@ -649,42 +673,26 @@
         setTimeout(() => estado.remove(), 2000);
       }
 
-      function deshacer() {
-        editor.undo();
-        editor.scrollIntoView(editor.getCursor());
-        mostrarEstado("↩️ Cambio deshecho");
-      }
-
-      function rehacer() {
-        editor.redo();
-        editor.scrollIntoView(editor.getCursor());
-        mostrarEstado("↪️ Cambio rehecho");
-      }
+      function deshacer() { editor.undo(); editor.scrollIntoView(editor.getCursor()); mostrarEstado("↩️ Cambio deshecho"); }
+      function rehacer()  { editor.redo(); editor.scrollIntoView(editor.getCursor()); mostrarEstado("↪️ Cambio rehecho"); }
 
       function colapsarFunciones() {
         const lastLine = editor.lineCount();
         for (let i = 0; i < lastLine; i++) {
-          if (/function\s|\bclass\s/.test(editor.getLine(i))) {
-            editor.foldCode({line: i, ch: 0}, null, "fold");
-          }
+          if (/function\s|\bclass\s/.test(editor.getLine(i))) editor.foldCode({line:i,ch:0}, null, "fold");
         }
       }
 
       function expandirFunciones() {
         const lastLine = editor.lineCount();
         for (let i = 0; i < lastLine; i++) {
-          if (/function\s|\bclass\s/.test(editor.getLine(i))) {
-            editor.foldCode({line: i, ch: 0}, null, "unfold");
-          }
+          if (/function\s|\bclass\s/.test(editor.getLine(i))) editor.foldCode({line:i,ch:0}, null, "unfold");
         }
       }
 
       function formatearCodigo() {
         const totalLines = editor.lineCount();
-        editor.operation(() => {
-          for (let i = 0; i < totalLines; i++) editor.indentLine(i, "smart");
-        });
-        // 👉 Ocultar menú flotante
+        editor.operation(() => { for (let i = 0; i < totalLines; i++) editor.indentLine(i, "smart"); });
         traslape();
       }
 
@@ -723,7 +731,6 @@
           if (!nv) {
             mostrarEstado("⚠️ El navegador bloqueó la ventana emergente");
           } else {
-            // Liberar URL después de que la ventana la haya usado
             nv.addEventListener("load", () => URL.revokeObjectURL(url), { once: true });
           }
         } catch(e) {
@@ -755,7 +762,7 @@
 
       /* ============================================================
          BACKUPS
-         ============================================================ */
+      ============================================================ */
       const BackupsKey = '_IDEv2Backups';
 
       function reiniciarSelector() {
@@ -779,6 +786,44 @@
       }
 
       let iBackupGuardados = 0;
+
+      /* ---- exportar todos los backups como ZIP ---- */
+      async function exportarBackupsZip(automode = false) {
+        const claves = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.endsWith(BackupsKey)) claves.push(key);
+        }
+        if (claves.length === 0) { if (!automode) mostrarEstado("⚠️ No hay backups guardados"); return; }
+
+        const zip = new JSZip();
+        claves.sort((a, b) => parseInt(a) - parseInt(b));
+        claves.forEach(key => {
+          try {
+            const data   = JSON.parse(localStorage.getItem(key));
+            const limpio = key.replace(BackupsKey, "").replace(/[^\w\-\[\]. ]/g, "_");
+            const nombre = `${limpio} (${(data.fecha||"").replace(/[/:]/g,"-")}).html`;
+            zip.file(nombre, data.contenido || "");
+          } catch(e) { /* ignorar corruptos */ }
+        });
+
+        const blob = await zip.generateAsync({ type: "blob" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        const ts = new Date().toISOString().slice(0,19).replace(/[T:]/g,"-");
+        a.download = `IDE_Backups_${ts}.zip`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+
+        if (automode) {
+          // Limpiar localStorage después del ZIP automático
+          limpiarBackups();
+          mostrarEstado("📦 LocalStorage lleno → ZIP descargado y limpiado");
+        } else {
+          mostrarEstado(`📦 ZIP con ${claves.length} backup(s) descargado`);
+        }
+      }
+
       function guardarBackup(contenido) {
         const nombre     = nombreDelHtml();
         const key        = iBackupGuardados + ": [" + nombre + "]" + BackupsKey;
@@ -786,15 +831,31 @@
         const pesoKB     = (pesoBytes / 1024).toFixed(2);
         const data       = { contenido, fecha: new Date().toLocaleString(), peso: `${pesoBytes} B / ${pesoKB} KB` };
 
-        // manejar desbordamiento de localStorage
         try {
           localStorage.setItem(key, JSON.stringify(data));
         } catch(e) {
-          mostrarEstado("⚠️ localStorage lleno. Limpia backups (🗑️).");
-          return; // No incrementar ni agregar al selector si falló
+          // LocalStorage lleno → exportar ZIP automáticamente y luego reintentar
+          mostrarEstado("⚠️ LocalStorage lleno — generando ZIP…");
+          exportarBackupsZip(true).then(() => {
+            // Reintentar guardar tras limpiar
+            try {
+              iBackupGuardados = 0;
+              const key2 = "0: [" + nombre + "]" + BackupsKey;
+              localStorage.setItem(key2, JSON.stringify(data));
+              iBackupGuardados = 1;
+              agregarOpcionSelector(key2, data);
+            } catch(e2) {
+              mostrarEstado("❌ No se pudo guardar ni tras limpiar");
+            }
+          });
+          return;
         }
 
         iBackupGuardados++;
+        agregarOpcionSelector(key, data);
+      }
+
+      function agregarOpcionSelector(key, data) {
         const selector = document.getElementById("backupSelector");
         const opt      = document.createElement("option");
         const limpio   = key.replace(BackupsKey, "");
@@ -802,7 +863,6 @@
         opt.textContent = `${limpio} - ${data.fecha} - ${data.peso}`;
         selector.appendChild(opt);
       }
-
 
       function setListBackup() {
         const selector = document.getElementById("backupSelector");
@@ -815,7 +875,6 @@
         }
         claves.sort((a, b) => parseInt(a) - parseInt(b));
 
-        // sincronizar el contador con el índice más alto existente
         if (claves.length > 0) {
           iBackupGuardados = parseInt(claves[claves.length - 1]) + 1;
         } else {
@@ -823,51 +882,156 @@
         }
 
         claves.forEach(key => {
-          // ignorar backups corruptos sin romper los demás
           try {
-            const data   = JSON.parse(localStorage.getItem(key));
-            const limpio = key.replace(BackupsKey, "");
-            const opt    = document.createElement("option");
-            opt.value    = limpio;
-            opt.textContent = `${limpio} - ${data.fecha} - ${data.peso}`;
-            selector.appendChild(opt);
+            const data = JSON.parse(localStorage.getItem(key));
+            agregarOpcionSelector(key, data);
           } catch(e) {
             console.warn("Backup corrupto ignorado:", key);
           }
         });
       }
 
-      function aplicarBackup() {
+      /* ============================================================
+         DIFF VISUAL
+      ============================================================ */
+      let _backupParaDiff = null; // contenido pendiente de aplicar
+
+      function mostrarDiffBackup() {
         const selector     = document.getElementById("backupSelector");
         const nombreLimpio = selector.value;
-        if (!nombreLimpio) { mostrarEstado("📂 Ningún backup seleccionado"); return; }
+        if (!nombreLimpio) return;
 
-        const key  = nombreLimpio + BackupsKey;
+        const key = nombreLimpio + BackupsKey;
+        let data;
         try {
-          const data = JSON.parse(localStorage.getItem(key));
-          if (data && data.contenido) {
-            editor.setValue(data.contenido);
-
-            const matchNombre = nombreLimpio.match(/\[(.+?)\]/);
-            if (matchNombre) {
-              // matchNombre[1] = "Proyecto1.html" → quitar extensión
-              const soloNombre = matchNombre[1].replace(/\.[^/.]+$/, "");
-              document.getElementById("NombreProyecto").value = soloNombre;
-            }
-
-            mostrarEstado(`📂 Backup "${nombreLimpio}" cargado (${data.fecha})`);
-          } else {
-            mostrarEstado("⚠️ No se encontró contenido en esa key");
-          }
+          data = JSON.parse(localStorage.getItem(key));
         } catch(e) {
-          mostrarEstado("❌ Error al cargar backup: " + e.message);
+          mostrarEstado("❌ Error al leer backup: " + e.message);
+          return;
         }
+        if (!data || !data.contenido) { mostrarEstado("⚠️ Backup vacío"); return; }
+
+        _backupParaDiff = data.contenido;
+        const textoActual  = editor.getValue();
+        const textoBackup  = data.contenido;
+
+        renderDiff(textoActual, textoBackup);
+        document.getElementById("modalDiff").classList.add("visible");
+      }
+
+      function aplicarBackupDesideDiff() {
+        if (!_backupParaDiff) return;
+        editor.setValue(_backupParaDiff);
+
+        // Actualizar nombre del proyecto desde el selector
+        const selector     = document.getElementById("backupSelector");
+        const nombreLimpio = selector.value;
+        const matchNombre  = nombreLimpio.match(/\[(.+?)\]/);
+        if (matchNombre) {
+          document.getElementById("NombreProyecto").value = matchNombre[1].replace(/\.[^/.]+$/, "");
+        }
+
+        cerrarDiff();
+        mostrarEstado("📂 Backup cargado");
+        _backupParaDiff = null;
+      }
+
+      function cerrarDiff() {
+        document.getElementById("modalDiff").classList.remove("visible");
+        // Resetear el selector para evitar que quede seleccionado
+        document.getElementById("backupSelector").value = "";
+      }
+
+      /* ---- Algoritmo diff línea a línea (LCS simplificado) ---- */
+      function computeDiff(linesA, linesB) {
+        // Myers diff simplificado: compara línea a línea con LCS greedy
+        const result = [];
+        let i = 0, j = 0;
+        const n = linesA.length, m = linesB.length;
+
+        // Construir tabla LCS
+        const dp = Array.from({length: n + 1}, () => new Array(m + 1).fill(0));
+        for (let r = n - 1; r >= 0; r--) {
+          for (let c = m - 1; c >= 0; c--) {
+            if (linesA[r] === linesB[c]) {
+              dp[r][c] = 1 + dp[r+1][c+1];
+            } else {
+              dp[r][c] = Math.max(dp[r+1][c], dp[r][c+1]);
+            }
+          }
+        }
+
+        // Reconstruir
+        i = 0; j = 0;
+        while (i < n || j < m) {
+          if (i < n && j < m && linesA[i] === linesB[j]) {
+            result.push({ type: "equal", text: linesA[i], lineA: i+1, lineB: j+1 });
+            i++; j++;
+          } else if (j < m && (i >= n || dp[i][j+1] >= dp[i+1][j])) {
+            result.push({ type: "added", text: linesB[j], lineB: j+1 });
+            j++;
+          } else {
+            result.push({ type: "removed", text: linesA[i], lineA: i+1 });
+            i++;
+          }
+        }
+        return result;
+      }
+
+      function renderDiff(textoActual, textoBackup) {
+        const linesActual = textoActual.split("\n");
+        const linesBackup = textoBackup.split("\n");
+
+        // Limitar a 3000 líneas por lado para no congelar
+        const MAX = 3000;
+        const A = linesActual.slice(0, MAX);
+        const B = linesBackup.slice(0, MAX);
+
+        const diff = computeDiff(A, B);
+
+        let added = 0, removed = 0, equal = 0;
+        const frag = document.createDocumentFragment();
+
+        diff.forEach(item => {
+          const row = document.createElement("div");
+          row.className = "diff-line " + item.type;
+
+          const gutter = document.createElement("span");
+          gutter.className = "diff-gutter";
+          gutter.textContent = item.type === "added"   ? (item.lineB || "")
+                             : item.type === "removed" ? (item.lineA || "")
+                             : (item.lineA || "");
+
+          const sign = document.createElement("span");
+          sign.className = "diff-sign";
+          sign.textContent = item.type === "added" ? "+" : item.type === "removed" ? "−" : " ";
+
+          const text = document.createElement("span");
+          // Escapar HTML
+          text.textContent = item.text;
+
+          row.appendChild(gutter);
+          row.appendChild(sign);
+          row.appendChild(text);
+          frag.appendChild(row);
+
+          if (item.type === "added")   added++;
+          else if (item.type === "removed") removed++;
+          else equal++;
+        });
+
+        document.getElementById("diffContent").innerHTML = "";
+        document.getElementById("diffContent").appendChild(frag);
+
+        document.getElementById("statAdded").textContent   = `+${added}`;
+        document.getElementById("statRemoved").textContent = `−${removed}`;
+        document.getElementById("statEqual").textContent   = `≈${equal}`;
       }
 
 
       /* ============================================================
          AUTOGUARDADO
-         ============================================================ */
+      ============================================================ */
       let autoguardado   = true;
       let ultimoContenido = "";
 
@@ -890,7 +1054,6 @@
 
       /* ============================================================
          AUTOCOMPLETE Y HIGHLIGHT
-         ✅ FIX: bandera + cm.operation() evitan que el cursor salte
       ============================================================ */
       editor.on("inputRead", function(cm, change) {
         if (change.text[0] && /[A-Za-z]/.test(change.text[0])) {
@@ -899,25 +1062,17 @@
       });
 
       let highlightTimeout;
-      let aplicandoMarks = false; // 🔒 evita reentrada en cursorActivity
+      let aplicandoMarks = false;
 
       editor.on("cursorActivity", function(cm) {
-        // Si hay selección, no interferir (permite menú nativo copiar/pegar)
         if (cm.somethingSelected()) return;
-        // Si ya estamos aplicando marks, no reentrar
         if (aplicandoMarks) return;
-
         const cursor = cm.getCursor();
-
         clearTimeout(highlightTimeout);
         highlightTimeout = setTimeout(() => {
-          aplicandoMarks = true; // 🔒 bloquear
-
-          // cm.operation() agrupa todos los cambios en una sola
-          // operación atómica: CodeMirror no dispara eventos intermedios
+          aplicandoMarks = true;
           cm.operation(() => {
             cm.getAllMarks().forEach(m => m.clear());
-
             const token = cm.getTokenAt(cursor);
             if (token && /^[A-Za-z_]\w*$/.test(token.string)) {
               const regex = new RegExp("\\b" + token.string + "\\b", "g");
@@ -934,50 +1089,20 @@
               });
             }
           });
-
-          aplicandoMarks = false; // 🔒 liberar
+          aplicandoMarks = false;
         }, 2000);
       });
 
 
       /* ============================================================
-         HTML POR DEFECTO
-         ============================================================ */
-      function htmlPorDefecto() {
-        return `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Documento por defecto</title>
+         MENÚ REEMPLAZAR — NAVEGACIÓN DE OCURRENCIAS
+      ============================================================ */
+      let _ocurrencias   = [];   // Array de índices (posición en string) donde se encontró
+      let _ocurrenciaIdx = 0;    // Índice actual
+      let _buscarTexto   = "";   // Texto buscado actualmente
 
-  <style>
-    /* Aquí puedes escribir estilos CSS iniciales */
-      </style>
-      </head>
-<body>
-  <h1>Bienvenido al EditorVisor</h1>
-  <p>Este es un documento HTML cargado por defecto.</p>
-
-  <script>
-    // Aquí puedes escribir código JS inicial
-  <\/script>
-<\/body>
-<\/html>
-`;
-      }
-
-
-
-
-
-      /* ============================================================
-   MENÚ REEMPLAZAR CÓDIGO
-   ============================================================ */
       function abrirMenuReemplazar() {
-        // Ocultar menú principal
         document.querySelector(".menuFullPantalla").style.display = "none";
-        // Mostrar menú reemplazar
         const m = document.getElementById("menuReemplazar");
         m.style.display = "flex";
         reiniciarMenuReemplazar();
@@ -985,60 +1110,86 @@
 
       function cerrarMenuReemplazar() {
         document.getElementById("menuReemplazar").style.display = "none";
-        // Restaurar menú principal
         document.querySelector(".menuFullPantalla").style.display = "block";
       }
 
       function reiniciarMenuReemplazar() {
-        document.getElementById("txtBuscar").value  = "";
-        document.getElementById("txtNuevo").value   = "";
-        document.getElementById("estadoBusqueda").style.display  = "none";
-        document.getElementById("estadoBusqueda").className      = "";
-        document.getElementById("estadoBusqueda").textContent    = "";
-        document.getElementById("seccionNuevo").style.display    = "none";
-        document.getElementById("seccionBuscar").style.display   = "flex";
+        document.getElementById("txtBuscar").value              = "";
+        document.getElementById("txtNuevo").value               = "";
+        document.getElementById("estadoBusqueda").style.display = "none";
+        document.getElementById("estadoBusqueda").className     = "";
+        document.getElementById("estadoBusqueda").textContent   = "";
+        document.getElementById("seccionNuevo").style.display   = "none";
+        document.getElementById("seccionBuscar").style.display  = "flex";
+        document.getElementById("navOcurrencias").style.display = "none";
+        _ocurrencias   = [];
+        _ocurrenciaIdx = 0;
+        _buscarTexto   = "";
       }
 
       function buscarCodigo() {
         const buscar  = document.getElementById("txtBuscar").value;
         const estado  = document.getElementById("estadoBusqueda");
         const secNuevo = document.getElementById("seccionNuevo");
+        const navOc   = document.getElementById("navOcurrencias");
 
         if (!buscar.trim()) {
           estado.style.display  = "block";
           estado.className      = "no-encontrado";
           estado.textContent    = "⚠️ El campo de búsqueda está vacío.";
           secNuevo.style.display = "none";
+          navOc.style.display    = "none";
           return;
         }
 
         const contenido = editor.getValue();
-        const idx       = contenido.indexOf(buscar);
+        _buscarTexto    = buscar;
+        _ocurrencias    = [];
+
+        let pos = 0;
+        while ((pos = contenido.indexOf(buscar, pos)) !== -1) {
+          _ocurrencias.push(pos);
+          pos += buscar.length;
+        }
 
         estado.style.display = "block";
 
-        if (idx !== -1) {
-          // Contar ocurrencias
-          let ocurrencias = 0;
-          let pos = 0;
-          while ((pos = contenido.indexOf(buscar, pos)) !== -1) { ocurrencias++; pos += buscar.length; }
-
+        if (_ocurrencias.length > 0) {
+          _ocurrenciaIdx = 0;
           estado.className   = "encontrado";
-          estado.textContent = `✅ Encontrado: ${ocurrencias} ocurrencia${ocurrencias > 1 ? "s" : ""}`;
+          estado.textContent = `✅ ${_ocurrencias.length} ocurrencia${_ocurrencias.length > 1 ? "s" : ""} encontrada${_ocurrencias.length > 1 ? "s" : ""}`;
 
-          // Resaltar primera ocurrencia en el editor
-          const from = editor.posFromIndex(idx);
-          const to   = editor.posFromIndex(idx + buscar.length);
-          editor.setSelection(from, to);
-          editor.scrollIntoView({ from, to }, 80);
+          resaltarOcurrenciaActual();
 
-          // Mostrar sección de nuevo código
+          navOc.style.display    = _ocurrencias.length > 1 ? "flex" : "none";
           secNuevo.style.display = "flex";
         } else {
           estado.className       = "no-encontrado";
           estado.textContent     = "❌ No encontrado en el editor.";
           secNuevo.style.display = "none";
+          navOc.style.display    = "none";
         }
+      }
+
+      function resaltarOcurrenciaActual() {
+        if (_ocurrencias.length === 0) return;
+        const idx    = _ocurrencias[_ocurrenciaIdx];
+        const from   = editor.posFromIndex(idx);
+        const to     = editor.posFromIndex(idx + _buscarTexto.length);
+        editor.setSelection(from, to);
+        editor.scrollIntoView({ from, to }, 100);
+        actualizarContador();
+      }
+
+      function actualizarContador() {
+        document.getElementById("contadorOcurrencias").textContent =
+          `${_ocurrenciaIdx + 1} / ${_ocurrencias.length}`;
+      }
+
+      function navegarOcurrencia(delta) {
+        if (_ocurrencias.length === 0) return;
+        _ocurrenciaIdx = (_ocurrenciaIdx + delta + _ocurrencias.length) % _ocurrencias.length;
+        resaltarOcurrenciaActual();
       }
 
       function ejecutarReemplazo() {
@@ -1050,12 +1201,8 @@
         const contenido   = editor.getValue();
         const reemplazado = contenido.split(buscar).join(nuevo);
 
-        if (reemplazado === contenido) {
-          mostrarEstado("⚠️ No se realizaron cambios");
-          return;
-        }
+        if (reemplazado === contenido) { mostrarEstado("⚠️ No se realizaron cambios"); return; }
 
-        // Contar cuántas veces se reemplazó
         const veces = contenido.split(buscar).length - 1;
         editor.setValue(reemplazado);
         cerrarMenuReemplazar();
@@ -1063,11 +1210,34 @@
       }
 
 
-
+      /* ============================================================
+         HTML POR DEFECTO
+      ============================================================ */
+      function htmlPorDefecto() {
+        return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documento por defecto</title>
+  <style>
+    /* Aquí puedes escribir estilos CSS iniciales */
+  </style>
+</head>
+<body>
+  <h1>Bienvenido al EditorVisor</h1>
+  <p>Este es un documento HTML cargado por defecto.</p>
+  <script>
+    // Aquí puedes escribir código JS inicial
+  <\/script>
+<\/body>
+<\/html>
+`;
+      }
 
       /* ============================================================
          INIT
-         ============================================================ */
+      ============================================================ */
       window.addEventListener("beforeunload", e => {
         e.preventDefault();
         e.returnValue = "¿Seguro que quieres salir?";
@@ -1078,7 +1248,6 @@
         setListBackup();
         editor.setValue(htmlPorDefecto());
 
-        // Restaurar tema guardado
         try {
           const temaGuardado = localStorage.getItem("editorTema");
           if (temaGuardado) {
@@ -1090,7 +1259,6 @@
 
     </script>
 
-
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("sw.js")
@@ -1098,8 +1266,6 @@
           .catch((err) => console.error("Error al registrar SW:", err));
       }
     </script>
-
-
 
   </body>
 </html>
