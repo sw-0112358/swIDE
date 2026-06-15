@@ -1058,7 +1058,7 @@
         </div>
 
         <div id="configFooter">
-          <span>🔒 Guardado en localStorage</span>
+          <span>🔒 Keys guardadas en la nube · Nunca expuestas al navegador</span>
         </div>
 
       </div>
@@ -1143,9 +1143,6 @@ REGLAS IMPORTANTES para bloques JS:
 - Nunca omitas los delimitadores en código JS.
 - Para HTML y CSS puedes usar bloques markdown normales.`;
 
-      let APIKeyAnthropic = '';
-      let APIKeyGemini    = '';
-      let APIKeyDeepSeek  = '';
 
       let cloudflareProxy = 'https://shiny-bread-e818.gx0112358.workers.dev/claude';
       let KV_BASE         = 'https://shiny-bread-e818.gx0112358.workers.dev';
@@ -1162,28 +1159,59 @@ REGLAS IMPORTANTES para bloques JS:
         document.getElementById("configEstado").style.color = "#fab387";
       }
 
-      function cargarConfig() {
+      async function cargarConfig() {
+        // Primero cargar lo no sensible del localStorage (proxy, kv, iaroll)
         try {
-          const cfg = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
-          if (cfg.anthropic)  APIKeyAnthropic = cfg.anthropic;
-          if (cfg.gemini)     APIKeyGemini    = cfg.gemini;
-          if (cfg.deepseek)   APIKeyDeepSeek  = cfg.deepseek;
-          if (cfg.proxy)      cloudflareProxy = cfg.proxy;
-          if (cfg.kv)         KV_BASE         = cfg.kv;
+          const local = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
+          if (local.proxy)  cloudflareProxy = local.proxy;
+          if (local.kv)     KV_BASE         = local.kv;
         } catch(e) {}
+
+        // Luego sincronizar con KV (solo actualiza proxy/kv/iaroll)
+        try {
+          const resp = await fetch(`${KV_BASE}/config-load?id=${getHistorialId()}`);
+          const cfg  = await resp.json();
+          if (cfg && cfg.proxy)  cloudflareProxy = cfg.proxy;
+          if (cfg && cfg.kv)     KV_BASE         = cfg.kv;
+          // iaroll lo maneja PromptIA() directo del textarea
+          if (cfg && cfg.iaroll) {
+            const el = document.getElementById("cfg-iaroll");
+            if (el) el.value = cfg.iaroll;
+          } 
+        } catch(e) { /* silencioso, usa caché local */ }
       }
 
-      function abrirConfig() {
+      async function abrirConfig() {
         document.querySelector(".menuFullPantalla").style.display = "none";
+
+        // Cargar lo no sensible del localStorage
         try {
-          const cfg = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
-          document.getElementById("cfg-anthropic").value = cfg.anthropic || '';
-          document.getElementById("cfg-gemini").value    = cfg.gemini    || '';
-          document.getElementById("cfg-deepseek").value  = cfg.deepseek  || '';
-          document.getElementById("cfg-proxy").value     = cfg.proxy     || cloudflareProxy;
-          document.getElementById("cfg-kv").value        = cfg.kv        || KV_BASE;
-          document.getElementById("cfg-iaroll").value    = cfg.iaroll    || IARollDefault;
+          const local = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
+          document.getElementById("cfg-proxy").value  = local.proxy  || cloudflareProxy;
+          document.getElementById("cfg-kv").value     = local.kv     || KV_BASE;
+          document.getElementById("cfg-iaroll").value = local.iaroll || IARollDefault;
         } catch(e) {}
+
+        // Limpiar campos de keys — nunca se muestran
+        document.getElementById("cfg-anthropic").value = '';
+        document.getElementById("cfg-gemini").value    = '';
+        document.getElementById("cfg-deepseek").value  = '';
+
+        // Consultar al Worker qué keys están guardadas
+        try {
+          const resp = await fetch(`${KV_BASE}/config-load?id=${getHistorialId()}`);
+          const cfg  = await resp.json();
+          if (cfg) {
+            document.getElementById("cfg-anthropic").placeholder =
+              cfg.tieneAnthropic ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-ant-api03-…";
+            document.getElementById("cfg-gemini").placeholder =
+              cfg.tieneGemini    ? "✅ Guardada en la nube — pega nueva para actualizar" : "AQ.Ab8…";
+            document.getElementById("cfg-deepseek").placeholder =
+              cfg.tieneDeepseek  ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-cfc…";
+            if (cfg.iaroll) document.getElementById("cfg-iaroll").value = cfg.iaroll;
+          }
+        } catch(e) {}
+
         document.getElementById("configEstado").textContent = "Sin cambios";
         document.getElementById("configEstado").style.color = "#6c7086";
         document.getElementById("modalConfig").classList.add("visible");
@@ -1194,8 +1222,10 @@ REGLAS IMPORTANTES para bloques JS:
         document.querySelector(".menuFullPantalla").style.display = "block";
       }
 
-      function guardarConfig() {
+      async function guardarConfig() {
+        const id = getHistorialId();
         const cfg = {
+          id,
           anthropic: document.getElementById("cfg-anthropic").value.trim(),
           gemini:    document.getElementById("cfg-gemini").value.trim(),
           deepseek:  document.getElementById("cfg-deepseek").value.trim(),
@@ -1204,19 +1234,40 @@ REGLAS IMPORTANTES para bloques JS:
           iaroll:    document.getElementById("cfg-iaroll").value.trim(),
         };
         try {
-          localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
-          cargarConfig();
-          document.getElementById("configEstado").textContent = "✅ Guardado correctamente";
-          document.getElementById("configEstado").style.color = "#a6e3a1";
+          const resp = await fetch(`${KV_BASE}/config-save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(cfg)
+          });
+          if (resp.ok) {
+            // Solo guardar lo no sensible en localStorage como caché
+            localStorage.setItem(CFG_KEY, JSON.stringify({
+              proxy:  cfg.proxy,
+              kv:     cfg.kv,
+              iaroll: cfg.iaroll,
+            }));
+            cargarConfig();
+            document.getElementById("configEstado").textContent = "✅ Guardado en la nube";
+            document.getElementById("configEstado").style.color = "#a6e3a1";
+          } else {
+            throw new Error("Error del servidor");
+          }
         } catch(e) {
-          document.getElementById("configEstado").textContent = "❌ Error al guardar";
+          document.getElementById("configEstado").textContent = "❌ Error: " + e.message;
           document.getElementById("configEstado").style.color = "#f38ba8";
         }
       }
 
-      function limpiarConfig() {
+      async function limpiarConfig() {
         if (!confirm("¿Borrar toda la configuración?")) return;
         localStorage.removeItem(CFG_KEY);
+        try {
+          await fetch(`${KV_BASE}/config-save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: getHistorialId() }) // guarda vacío
+          });
+        } catch(e) {}
         document.getElementById("cfg-anthropic").value = '';
         document.getElementById("cfg-gemini").value    = '';
         document.getElementById("cfg-deepseek").value  = '';
@@ -1959,9 +2010,8 @@ REGLAS IMPORTANTES para bloques JS:
           }
         };
 
-        const finalizarStream = (exito) => {
+        const finalizarStream = () => {
           burbujaAsistente.classList.remove("claude-cursor");
-          // Actualización final con texto completo
           burbujaAsistente.value = textoRespuesta;
           if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
           if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
@@ -1971,25 +2021,15 @@ REGLAS IMPORTANTES para bloques JS:
         };
 
         try {
-          // ── Construir request según modelo ──
-          let fetchUrl, fetchOpts, parsearDelta;
-
-          // Añadir mensaje usuario al historial UNA SOLA VEZ para todos los modelos
           _claudeHistorial.push({ role: "user", content: contenidoUsuario });
 
+          // ── Construir payload según modelo ──
+          let payload, parsearDelta;
+
           if (_claudeModelo === "claude") {
-            fetchUrl  = cloudflareProxy;
-            fetchOpts = {
-              method: "POST",
-              headers: {
-                "Content-Type":      "application/json",
-                "x-api-key":         APIKeyAnthropic,
-                "anthropic-version": "2023-06-01",
-              },
-              body: JSON.stringify({
-                model: "claude-sonnet-4-6", max_tokens: 4096, stream: true,
-                system: PromptIA(), messages: _claudeHistorial
-              })
+            payload = {
+              model: "claude-sonnet-4-6", max_tokens: 4096, stream: true,
+              system: PromptIA(), messages: _claudeHistorial
             };
             parsearDelta = (obj) => {
               if (obj.type === "content_block_delta" && obj.delta?.type === "text_delta")
@@ -1998,18 +2038,14 @@ REGLAS IMPORTANTES para bloques JS:
             };
 
           } else if (_claudeModelo === "deepseek") {
-
             const historialSinUltimo = _claudeHistorial.slice(0, -1);
-            const mensajes = [
-              { role: "system", content: PromptIA() },
-              ...historialSinUltimo,
-              { role: "user", content: contenidoUsuario + PromptIA() }
-            ];
-            fetchUrl  = "https://api.deepseek.com/chat/completions";
-            fetchOpts = {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${APIKeyDeepSeek}` },
-              body: JSON.stringify({ model: "deepseek-chat", stream: true, messages: mensajes })
+            payload = {
+              model: "deepseek-chat", stream: true,
+              messages: [
+                { role: "system", content: PromptIA() },
+                ...historialSinUltimo,
+                { role: "user", content: contenidoUsuario + PromptIA() }
+              ]
             };
             parsearDelta = (obj) => obj.choices?.[0]?.delta?.content || "";
 
@@ -2018,75 +2054,70 @@ REGLAS IMPORTANTES para bloques JS:
               role: m.role === "assistant" ? "model" : "user",
               parts: [{ text: m.content }]
             }));
-
             historialGemini.push({
               role: "user",
               parts: [{ text: contenidoUsuario + PromptIA() }]
             });
-
-            fetchUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${APIKeyGemini}`;
-            fetchOpts = {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                system_instruction: {
-                  parts: [{ text: PromptIA() }]
-                },
-                contents: historialGemini,
-                generationConfig: {
-                  temperature: 0.7,
-                  maxOutputTokens: 8192
-                }
-              })
+            payload = {
+              system_instruction: { parts: [{ text: PromptIA() }] },
+              contents: historialGemini,
+              generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
             };
             parsearDelta = (obj) => obj.candidates?.[0]?.content?.parts?.[0]?.text || "";
           }
 
-        // ── Fetch y stream ──
-        const response = await fetch(fetchUrl, fetchOpts);
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({}));
-          throw new Error(err.error?.message || `HTTP ${response.status}`);
-        }
+          // ── Un solo fetch para todos los modelos ──
+          const response = await fetch(`${KV_BASE}/ai-proxy`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id:           getHistorialId(),
+              modelo:       _claudeModelo,
+              modeloGemini: "gemini-2.5-flash",
+              payload
+            })
+          });
 
-        const reader  = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer    = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lineas = buffer.split("\n");
-          buffer = lineas.pop();
-
-          for (const linea of lineas) {
-            if (!linea.startsWith("data: ")) continue;
-            const dato = linea.slice(6).trim();
-            if (!dato || dato === "[DONE]") continue;
-            try {
-              const fragmento = parsearDelta(JSON.parse(dato));
-              if (fragmento) { textoRespuesta += fragmento; actualizarBurbuja(); }
-            } catch(e) { /* ignorar */ }
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error?.message || response.statusText || `HTTP ${response.status}`);
           }
+
+          const reader  = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer    = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lineas = buffer.split("\n");
+            buffer = lineas.pop();
+            for (const linea of lineas) {
+              if (!linea.startsWith("data: ")) continue;
+              const dato = linea.slice(6).trim();
+              if (!dato || dato === "[DONE]") continue;
+              try {
+                const fragmento = parsearDelta(JSON.parse(dato));
+                if (fragmento) { textoRespuesta += fragmento; actualizarBurbuja(); }
+              } catch(e) { /* ignorar */ }
+            }
+          }
+
+          _claudeHistorial.push({ role: "assistant", content: textoRespuesta });
+          finalizarStream();
+
+        } catch(err) {
+          burbujaAsistente.classList.remove("claude-cursor");
+          burbujaAsistente.textContent = `❌ Error: ${err.message}`;
+          burbujaAsistente.style.borderColor = "#f38ba8";
+          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
+          _claudeHistorial.pop();
+          _claudeStreaming = false;
+          document.getElementById("claudeEnviar").disabled = false;
+          document.getElementById("claudeInput").focus();
         }
-
-        // ── Guardar respuesta en historial ──
-        _claudeHistorial.push({ role: "assistant", content: textoRespuesta });
-
-        finalizarStream(true);
-
-      } catch(err) {
-        burbujaAsistente.classList.remove("claude-cursor");
-        burbujaAsistente.textContent = `❌ Error: ${err.message}`;
-        burbujaAsistente.style.borderColor = "#f38ba8";
-        if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
-        if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
-        _claudeHistorial.pop(); // revertir mensaje usuario
-        _claudeStreaming = false;
-        document.getElementById("claudeEnviar").disabled = false;
-        document.getElementById("claudeInput").focus();
-      }
       }
 
       function claudeEnviarMensaje(pregunta)   { return streamIA(pregunta); }
@@ -2554,8 +2585,8 @@ REGLAS IMPORTANTES para bloques JS:
         e.returnValue = "¿Seguro que quieres salir?";
       });
 
-      document.addEventListener("DOMContentLoaded", () => {
-        cargarConfig();
+      document.addEventListener("DOMContentLoaded", async () => {
+        await cargarConfig();
         setEditorNormal();
         setListBackup();
         editor.setValue(htmlPorDefecto());
