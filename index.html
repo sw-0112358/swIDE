@@ -1145,8 +1145,7 @@ REGLAS IMPORTANTES para bloques JS:
 
 
       const WORKER_KEY    = '_cf_worker_url';
-      const _WORKER_DEFAULT = 'https://shiny-bread-e818.gx0112358.workers.dev';
-      let KV_BASE         = localStorage.getItem(WORKER_KEY) || _WORKER_DEFAULT;
+      let KV_BASE         = localStorage.getItem(WORKER_KEY);
       let cloudflareProxy = KV_BASE + '/claude';
 
       function PromptIA() {
@@ -1161,13 +1160,6 @@ REGLAS IMPORTANTES para bloques JS:
       }
 
       async function cargarConfig() {
-        // Leer Worker URL del localStorage
-        const workerUrl = localStorage.getItem(WORKER_KEY);
-        if (workerUrl) {
-          KV_BASE         = workerUrl;
-          cloudflareProxy = workerUrl + '/claude';
-        }
-
         // Sincronizar iaroll desde KV
         try {
           const resp = await fetch(`${KV_BASE}/config-load?id=${getHistorialId()}`);
