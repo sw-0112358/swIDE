@@ -870,6 +870,60 @@
       #configBody textarea:focus { border-color:#cba6f7; box-shadow:none; }
 
 
+      /* ── MINI MENÚ OPENROUTER ── */
+      #menuOR {
+        position: fixed;
+        top: 38%;
+        right: 20px;
+        width: 260px;
+        background: #1e1e2e;
+        border: 2px solid #cba6f7;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        z-index: 99999;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        font-family: 'JetBrains Mono', monospace;
+      }
+      #menuOR-header {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 8px 12px; background: #181825;
+        border-bottom: 1px solid #45475a;
+        font-size: 11px; color: #cba6f7; font-weight: bold;
+      }
+      #menuOR-lista {
+        display: flex; flex-direction: column; padding: 6px 0;
+      }
+      .or-opcion {
+        display: flex; align-items: center; gap: 8px;
+        padding: 7px 14px; cursor: pointer;
+        font-size: 11px; color: #cdd6f4;
+        transition: background .12s;
+        border-left: 3px solid transparent;
+      }
+      .or-opcion:hover { background: #313244; }
+      .or-opcion.activa { border-left-color: #cba6f7; background: #313244; color: #cba6f7; }
+      .or-opcion-nombre { flex: 1; }
+      .or-opcion-tag {
+        font-size: 9px; color: #a6e3a1;
+        background: rgba(166,227,161,0.12);
+        border: 1px solid #a6e3a1;
+        border-radius: 3px; padding: 1px 5px;
+      }
+      #menuOR-footer {
+        padding: 8px 12px; background: #181825;
+        border-top: 1px solid #45475a;
+      }
+      #menuOR-footer button {
+        width: 100%; font-family: 'JetBrains Mono', monospace;
+        font-size: 11px; padding: 6px; margin: 0;
+        background: #cba6f7; color: #1e1e2e;
+        border: none; border-radius: 6px;
+        cursor: pointer; font-weight: bold;
+      }
+      #menuOR-footer button:hover { background: #b48ead; transform: none; }
+
     </style>
   </head>
   <body class="tema-claro">
@@ -1010,6 +1064,39 @@
     </div>
 
 
+    <!-- MINI MENÚ OPENROUTER -->
+    <div id="menuOR">
+      <div id="menuOR-header">
+        <span>🔀 OpenRouter — Modelos gratuitos</span>
+        <button type="button" class="bottonV2" onclick="cerrarMenuOR()" style="font-size:14px;">✖️</button>
+      </div>
+      <div id="menuOR-lista">
+        <div class="or-opcion activa" data-modelo="qwen/qwen3-235b-a22b:free" data-nombre="Qwen3 235B" onclick="seleccionarModeloOR(this)">
+          <span class="or-opcion-nombre">Qwen3 235B</span>
+          <span class="or-opcion-tag">free</span>
+        </div>
+        <div class="or-opcion" data-modelo="meta-llama/llama-3.3-70b-instruct:free" data-nombre="Llama 3.3 70B" onclick="seleccionarModeloOR(this)">
+          <span class="or-opcion-nombre">Llama 3.3 70B</span>
+          <span class="or-opcion-tag">free</span>
+        </div>
+        <div class="or-opcion" data-modelo="nvidia/llama-3.1-nemotron-ultra-253b-v1:free" data-nombre="Nemotron 253B" onclick="seleccionarModeloOR(this)">
+          <span class="or-opcion-nombre">Nemotron 253B</span>
+          <span class="or-opcion-tag">free</span>
+        </div>
+        <div class="or-opcion" data-modelo="mistralai/mistral-small-3.2-24b-instruct:free" data-nombre="Mistral Small" onclick="seleccionarModeloOR(this)">
+          <span class="or-opcion-nombre">Mistral Small</span>
+          <span class="or-opcion-tag">free</span>
+        </div>
+        <div class="or-opcion" data-modelo="deepseek/deepseek-chat:free" data-nombre="DeepSeek (OR)" onclick="seleccionarModeloOR(this)">
+          <span class="or-opcion-nombre">DeepSeek (OR)</span>
+          <span class="or-opcion-tag">free</span>
+        </div>
+      </div>
+      <div id="menuOR-footer">
+        <button onclick="guardarModeloOR()">✅ Usar este modelo</button>
+      </div>
+    </div>
+
     <div id="autosaveMsg">Guardado ✔️</div>
 
 
@@ -1044,8 +1131,8 @@
             <input type="text" id="cfg-deepseek" placeholder="sk-cfc…" autocomplete="off">
           </div>
           <div class="config-grupo">
-            <div class="claude-msg-label">☁️ CLOUDFLARE PROXY URL</div>
-            <input type="text" id="cfg-proxy" placeholder="https://…workers.dev/claude" autocomplete="off">
+            <div class="claude-msg-label">🔀 OPENROUTER API KEY</div>
+            <input type="text" id="cfg-openrouter" placeholder="sk-or-…" autocomplete="off">       
           </div>
           <div class="config-grupo">
             <div class="claude-msg-label">🗄️ KV BASE URL</div>
@@ -1079,6 +1166,7 @@
             <option value="claude">🤖 Claude Sonnet</option>
             <option value="gemini">✨ Gemini Flash</option>
             <option value="deepseek" selected>🧠 DeepSeek</option>
+            <option value="openrouter">🔀 Claude Sonnet (OR)</option>
           </select>
           <button type="button" class="bottonV2" onclick="cerrarClaude()" title="Cerrar">✖️</button>
         </div>
@@ -1145,8 +1233,7 @@ REGLAS IMPORTANTES para bloques JS:
 
 
       const WORKER_KEY    = '_cf_worker_url';
-      let KV_BASE         = localStorage.getItem(WORKER_KEY);
-      let cloudflareProxy = KV_BASE + '/claude';
+      let KV_BASE = localStorage.getItem(WORKER_KEY);
 
       function PromptIA() {
         const custom = document.getElementById("cfg-iaroll")?.value?.trim();
@@ -1176,12 +1263,12 @@ REGLAS IMPORTANTES para bloques JS:
 
         // Cargar Worker URL del localStorage
         document.getElementById("cfg-kv").value    = localStorage.getItem(WORKER_KEY) || KV_BASE;
-        document.getElementById("cfg-proxy").value = (localStorage.getItem(WORKER_KEY) || KV_BASE) + '/claude';
 
         // Limpiar campos de keys — nunca se muestran
-        document.getElementById("cfg-anthropic").value = '';
-        document.getElementById("cfg-gemini").value    = '';
-        document.getElementById("cfg-deepseek").value  = '';
+        document.getElementById("cfg-anthropic").value  = '';
+        document.getElementById("cfg-gemini").value     = '';
+        document.getElementById("cfg-deepseek").value   = '';
+        document.getElementById("cfg-openrouter").value = '';
 
         // Consultar al Worker qué keys están guardadas
         try {
@@ -1194,6 +1281,8 @@ REGLAS IMPORTANTES para bloques JS:
               cfg.tieneGemini    ? "✅ Guardada en la nube — pega nueva para actualizar" : "AQ.Ab8…";
             document.getElementById("cfg-deepseek").placeholder =
               cfg.tieneDeepseek  ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-cfc…";
+            document.getElementById("cfg-openrouter").placeholder =
+              cfg.tieneOpenrouter ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-or-…";
             if (cfg.iaroll) document.getElementById("cfg-iaroll").value = cfg.iaroll;
           }
         } catch(e) {}
@@ -1212,30 +1301,31 @@ REGLAS IMPORTANTES para bloques JS:
         const id  = getHistorialId();
         const cfg = {
           id,
-          proxy:  document.getElementById("cfg-proxy").value.trim(),
+          proxy:  "",
           kv:     document.getElementById("cfg-kv").value.trim(),
           iaroll: document.getElementById("cfg-iaroll").value.trim(),
         };
 
-        const anthropic = document.getElementById("cfg-anthropic").value.trim();
-        const gemini    = document.getElementById("cfg-gemini").value.trim();
-        const deepseek  = document.getElementById("cfg-deepseek").value.trim();
-        const hayKeys   = anthropic || gemini || deepseek;
+        const anthropic  = document.getElementById("cfg-anthropic").value.trim();
+        const gemini     = document.getElementById("cfg-gemini").value.trim();
+        const deepseek   = document.getElementById("cfg-deepseek").value.trim();
+        const openrouter = document.getElementById("cfg-openrouter").value.trim();
+        const hayKeys    = anthropic || gemini || deepseek || openrouter;
 
         if (!hayKeys) {
           // Sin keys nuevas → solo guardar Worker URL en localStorage
           localStorage.setItem(WORKER_KEY, cfg.kv);
           KV_BASE         = cfg.kv;
-          cloudflareProxy = cfg.kv + '/claude';
           document.getElementById("configEstado").textContent = "✅ Worker URL guardado localmente";
           document.getElementById("configEstado").style.color = "#a6e3a1";
           return;
         }
 
         // Hay keys nuevas → enviar a la nube
-        if (anthropic) cfg.anthropic = anthropic;
-        if (gemini)    cfg.gemini    = gemini;
-        if (deepseek)  cfg.deepseek  = deepseek;
+        if (anthropic) cfg.anthropic   = anthropic;
+        if (gemini)    cfg.gemini      = gemini;
+        if (deepseek)  cfg.deepseek    = deepseek;
+        if (openrouter) cfg.openrouter = openrouter;
 
         try {
           const resp = await fetch(`${KV_BASE}/config-save`, {
@@ -1246,7 +1336,6 @@ REGLAS IMPORTANTES para bloques JS:
           if (resp.ok) {
             localStorage.setItem(WORKER_KEY, cfg.kv);
             KV_BASE         = cfg.kv;
-            cloudflareProxy = cfg.kv + '/claude';
             await cargarConfig();
             document.getElementById("configEstado").textContent = "✅ Guardado en la nube";
             document.getElementById("configEstado").style.color = "#a6e3a1";
@@ -1272,8 +1361,8 @@ REGLAS IMPORTANTES para bloques JS:
         document.getElementById("cfg-anthropic").value = '';
         document.getElementById("cfg-gemini").value    = '';
         document.getElementById("cfg-deepseek").value  = '';
-        document.getElementById("cfg-proxy").value     = 'https://shiny-bread-e818.gx0112358.workers.dev/claude';
-        document.getElementById("cfg-kv").value        = 'https://shiny-bread-e818.gx0112358.workers.dev';
+
+        document.getElementById("cfg-kv").value        = '';
         document.getElementById("cfg-iaroll").value    = '';
         document.getElementById("configEstado").textContent = "🗑️ Configuración borrada";
         document.getElementById("configEstado").style.color = "#6c7086";
@@ -1423,9 +1512,24 @@ REGLAS IMPORTANTES para bloques JS:
       }
 
       function guardarAlportapapeles() {
-        navigator.clipboard.writeText(editor.getValue())
-          .then(()  => mostrarEstado("📋 Editor al portapapeles"))
-          .catch(err => alert("No se pudo copiar: " + err));
+        // Sincronizar CodeMirror al textarea subyacente antes de copiar
+        editor.save();
+        const contenido = editor.getValue();
+        if (!contenido) { mostrarEstado("⚠️ Editor vacío"); return; }
+        navigator.clipboard.writeText(contenido)
+          .then(() => mostrarEstado("📋 " + contenido.length + " chars al portapapeles"))
+          .catch(() => {
+          // Fallback: seleccionar y copiar via execCommand
+          const ta = document.getElementById("editor");
+          ta.value = contenido;
+          ta.select();
+          try {
+            document.execCommand("copy");
+            mostrarEstado("📋 " + contenido.length + " chars al portapapeles");
+          } catch(e) {
+            mostrarEstado("❌ No se pudo copiar");
+          }
+        });
       }
 
       function descargarArchivo() {
@@ -1898,16 +2002,61 @@ REGLAS IMPORTANTES para bloques JS:
       let _claudeHistorial  = []; // { role, content }
       let _claudeContexto   = ""; // código cargado como contexto
       let _claudeStreaming   = false;
-      let _claudeModelo     = "deepseek"; // "claude" | "gemini" | "deepseek"
+      let _claudeModelo     = "deepseek";
+      let _modeloOR         = "qwen/qwen3-235b-a22b:free";
+      let _modeloORNombre   = "Qwen3 235B";
+      let _orOpcionPendiente = null; // selección temporal antes de guardar
 
       function claudeCambiarModelo(modelo) {
+        if (modelo === "openrouter") {
+          // Abrir mini menú en lugar de activar directamente
+          abrirMenuOR();
+          // Revertir el selector visualmente hasta que confirme
+          return;
+        }
         _claudeModelo = modelo;
-        // El historial y contexto se conservan al cambiar de modelo
         mostrarEstado(
-          modelo === "gemini"   ? "✨ Gemini Flash activado" :
-          modelo === "deepseek" ? "🧠 DeepSeek activado"    :
+          modelo === "gemini"   ? "✨ Gemini Flash activado"  :
+          modelo === "deepseek" ? "🧠 DeepSeek activado"      :
           "🤖 Claude Sonnet activado"
         );
+      }
+
+      function abrirMenuOR() {
+        // Marcar la opción activa actual
+        document.querySelectorAll('.or-opcion').forEach(el => {
+          el.classList.toggle('activa', el.dataset.modelo === _modeloOR);
+        });
+        _orOpcionPendiente = null;
+        document.getElementById('menuOR').style.display = 'flex';
+      }
+
+      function cerrarMenuOR() {
+        document.getElementById('menuOR').style.display = 'none';
+        // Restaurar selector al modelo actual si no guardó
+        const sel = document.getElementById('claudeModeloSelector');
+        sel.value = _claudeModelo;
+      }
+
+      function seleccionarModeloOR(el) {
+        document.querySelectorAll('.or-opcion').forEach(e => e.classList.remove('activa'));
+        el.classList.add('activa');
+        _orOpcionPendiente = { modelo: el.dataset.modelo, nombre: el.dataset.nombre };
+      }
+
+      function guardarModeloOR() {
+        if (_orOpcionPendiente) {
+          _modeloOR       = _orOpcionPendiente.modelo;
+          _modeloORNombre = _orOpcionPendiente.nombre;
+        }
+        _claudeModelo = "openrouter";
+        // Actualizar texto del selector
+        const opt = document.querySelector('#claudeModeloSelector option[value="openrouter"]');
+        if (opt) opt.textContent = `🔀 ${_modeloORNombre} (OR)`;
+        const sel = document.getElementById('claudeModeloSelector');
+        sel.value = 'openrouter';
+        cerrarMenuOR();
+        mostrarEstado(`🔀 ${_modeloORNombre} via OpenRouter activado`);
       }
 
       function abrirClaude() {
@@ -2050,6 +2199,17 @@ REGLAS IMPORTANTES para bloques JS:
             };
             parsearDelta = (obj) => obj.choices?.[0]?.delta?.content || "";
 
+          } else if (_claudeModelo === "openrouter") {
+            payload = {
+              model: _modeloOR,
+              stream: true,
+              messages: [
+                { role: "system", content: PromptIA() },
+                ..._claudeHistorial.slice(0, -1),
+                { role: "user", content: contenidoUsuario }
+              ]
+            };
+            parsearDelta = (obj) => obj.choices?.[0]?.delta?.content || "";
           } else { // gemini
             const historialGemini = _claudeHistorial.slice(0, -1).map(m => ({
               role: m.role === "assistant" ? "model" : "user",
@@ -2075,6 +2235,7 @@ REGLAS IMPORTANTES para bloques JS:
               id:           getHistorialId(),
               modelo:       _claudeModelo,
               modeloGemini: "gemini-2.5-flash",
+              modeloOR:     _modeloOR,
               payload
             })
           });
