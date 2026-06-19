@@ -1202,7 +1202,7 @@
     <script>
 
 
-      const IARollDefault = `Eres un asistente experto en desarrollo web integrado en un IDE llamado EditorVisorIDE. El usuario trabaja principalmente con HTML, CSS y JavaScript de archivo único. Responde de forma concisa y práctica.
+      const IARollDefault = `Eres una asistente experta en desarrollo web integrada en un IDE llamado EditorVisorIDE. El usuario trabaja principalmente con HTML, CSS y JavaScript de archivo único. Responde de forma concisa y práctica.
 
 Cuando muestres código usa los siguientes formatos de bloque según el lenguaje:
 
@@ -1222,12 +1222,31 @@ código aquí
 <!-- fin -->
 
 REGLAS IMPORTANTES para bloques JS:
-- Si el bloque contiene funciones, encierra cada una entre <!-- js inicio funcion --> y <!-- js fin funcion -->
-- Si el bloque contiene variables/constantes globales, enciérralas entre <!-- js inicio variable gobales --> y <!-- js fin variables -->
-- Estos delimitadores van en su propia línea, DENTRO del bloque.
-- Nunca omitas los delimitadores en código JS.
-- Para HTML y CSS puedes usar bloques markdown normales.
-- Para indicar una Busqueda para reemplazar sigue las siguie el siguiente formato: **start** **Buscar** + **Linea de inicio: ** + código a buscar + **Linea final: ** + **Reemplazar** + código nuevo + **end**
+#1 - Si el bloque contiene funciones, encierra cada una entre <!-- js inicio funcion --> y <!-- js fin funcion -->
+#2 - Si el bloque contiene variables/constantes globales, enciérralas entre <!-- js inicio variable gobales --> y <!-- js fin variables -->
+#3 - Estos delimitadores van en su propia línea, DENTRO del bloque.
+#4 - Nunca omitas los delimitadores en código JS.
+#5 - Para HTML y CSS puedes usar bloques markdown normales.
+#6 - Para indicar cambios en el código usa EXACTAMENTE este formato, sin variaciones:
+
+**start**
+**Buscar**
+**Linea de inicio: (número de línea donde inicia el código a buscar)**
+
+CODIGO
+
+**Linea final: (número de línea donde termina el código a buscar)**
+**Reemplazar**
+
+CODIGO NUEVO
+
+**end**
+
+Reglas importantes:
+- Un solo par buscar/reemplazar por bloque start/end.
+- El código dentro de \`\`\` debe ser exacto, sin resumir ni omitir partes.
+- Nunca pongas alternativas ni variantes dentro del mismo bloque.
+- Si hay varios cambios, usa un bloque start/end separado para cada uno.
 
 `      
       ;
@@ -2478,24 +2497,36 @@ REGLAS IMPORTANTES para bloques JS:
             const RE_BLOQUE_START = /\*\*start\*\*[\s\S]*?\*\*end\*\*/gi;
             const bloques = texto.match(RE_BLOQUE_START) || [];
             bloques.forEach(bloque => {
-              const RE_CODE = /```[^\n]*\n([\s\S]*?)```/g;
+              // Limpiar triple backtick si el agente las incluyó
+              const bloqueClean = bloque.replace(/```[^\n]*/g, '```');
+
+              // Extraer líneas de inicio/fin
+              const mLineaB    = bloqueClean.match(/[Ll]i[nt]ea\s+de\s+inicio[:\s*]+(\d+)/);
+              const mLineaF    = bloqueClean.match(/[Ll]i[nt]ea\s+final[:\s*]+(\d+)/);
+              const lineaInicio = mLineaB ? parseInt(mLineaB[1]) : null;
+              const lineaFin    = mLineaF ? parseInt(mLineaF[1]) : null;
+
+              // Intentar extraer con triple backtick
+              const RE_CODE = /```\n([\s\S]*?)```/g;
               const codigos = [];
               let mc;
-              while ((mc = RE_CODE.exec(bloque)) !== null) {
+              while ((mc = RE_CODE.exec(bloqueClean)) !== null) {
                 codigos.push(mc[1]);
               }
 
-              // Extraer líneas de inicio/fin si las incluye el agente
-              const mLineaB = bloque.match(/[Ll]ínea\s+de\s+inicio[:\s]+(\d+)/);
-              const mLineaF = bloque.match(/[Ll]ínea\s+final[:\s]+(\d+)/);
-              const lineaInicio = mLineaB ? parseInt(mLineaB[1]) : null;
-              const lineaFin    = mLineaF ? parseInt(mLineaF[1]) : null;
+              // Fallback: extraer código entre **Buscar** y **Linea final:** sin backticks
+              if (codigos.length === 0) {
+                const mBuscar = bloqueClean.match(/\*\*Buscar\*\*[\s\S]*?\*\*Linea de inicio[^*]*\*\*([\s\S]*?)\*\*Linea final/i);
+                const mReemp  = bloqueClean.match(/\*\*Reemplazar\*\*\n([\s\S]*?)(?=\*\*end\*\*)/i);
+                if (mBuscar) codigos.push(mBuscar[1].trim());
+                if (mReemp)  codigos.push(mReemp[1].trim());
+              }
 
               if (codigos.length >= 2) {
                 pares.push({ busca: codigos[0], reemplaza: codigos[1], lineaInicio, lineaFin });
               } else if (codigos.length === 1) {
-                const mR = bloque.match(/\*\*Reemplazar?\*\*\s*([\s\S]*?)(?:\*\*end\*\*|$)/i);
-                if (mR) pares.push({ busca: codigos[0], reemplaza: mR[1].trim(), lineaInicio, lineaFin });
+                // Reemplazar vacío — eliminar el código buscado
+                pares.push({ busca: codigos[0], reemplaza: '', lineaInicio, lineaFin });
               }
             });
 
@@ -2548,6 +2579,23 @@ REGLAS IMPORTANTES para bloques JS:
                     btnAplicar.style.background = "#f38ba8";
                     setTimeout(() => { btnAplicar.textContent = "⚡ Aplicar"; btnAplicar.style.background = "#a6e3a1"; }, 2000);
                     return;
+                  }
+                  // Confrontar línea de inicio con el editor
+                  if (par.lineaInicio) {
+                    const lineas       = contenido.split('\n');
+                    const lineaEditor  = (lineas[par.lineaInicio - 1] || '').trim();
+                    const primeraLinea = buscarTexto.split('\n')[0].trim();
+                    if (lineaEditor !== primeraLinea) {
+                      btnAplicar.textContent = "⚠️ Línea no coincide";
+                      btnAplicar.style.background = "#fab387";
+                      btnAplicar.title = `Agente dijo línea ${par.lineaInicio}: "${primeraLinea}"\nEditor tiene: "${lineaEditor}"`;
+                      setTimeout(() => {
+                        btnAplicar.textContent = "⚡ Aplicar";
+                        btnAplicar.style.background = "#a6e3a1";
+                        btnAplicar.title = "";
+                      }, 3000);
+                      // No bloquea — igual permite aplicar si el texto fue encontrado
+                    }
                   }
                   const nuevo = contenido.split(buscarTexto).join(par.reemplaza.trim());
                   editor.setValue(nuevo);
