@@ -616,8 +616,8 @@
       .modalClaude.visible { display: flex; }
 
       #claudeBox {
-        background: #1e1e2e;
-        color: #cdd6f4;
+        background: #ffffff; /* Fondo blanco */
+        color: #333333; /* Color de texto oscuro para contrastar */
         width: 92vw;
         max-width: 780px;
         height: 82vh;
@@ -636,100 +636,88 @@
         justify-content: space-between;
         align-items: center;
         padding: 10px 16px;
-        background: #181825;
-        border-bottom: 1px solid #45475a;
+        background: #ffffff;
+        border-bottom: 1px solid #e2e5ea;
         flex-shrink: 0;
       }
-      #claudeHeader strong { font-size: 14px; color: #cba6f7; }
+      #claudeHeader strong { font-size: 14px; color: #3b6ef8; }
 
       #claudeAcciones {
         display: flex;
         gap: 6px;
         padding: 8px 12px;
-        background: #181825;
-        border-bottom: 1px solid #45475a;
+        background: #f7f8fa;
+        border-bottom: 1px solid #e2e5ea;
         flex-shrink: 0;
         flex-wrap: wrap;
       }
-      #claudeAcciones button {
+      #claudeAcciones button, #claudeAcciones select {
         font-family: 'JetBrains Mono', monospace;
         font-size: 11px;
         padding: 5px 10px;
         margin: 0;
         border-radius: 6px;
-        border: 1px solid #45475a;
-        background: #313244;
-        color: #cdd6f4;
+        border: 1px solid #e2e5ea;
+        background: #ffffff;
+        color: #4a5060;
         cursor: pointer;
-        transition: background 0.15s, border-color 0.15s;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+        outline: none;
       }
-      #claudeAcciones button:hover {
-        background: #45475a;
-        border-color: #cba6f7;
+      #claudeAcciones button:hover, #claudeAcciones select:hover {
+        background: #eef1ff;
+        border-color: #3b6ef8;
+        color: #3b6ef8;
         transform: none;
       }
-      #claudeAcciones button:active { background: #585b70; transform: none; }
+      #claudeAcciones button:active { background: #dde3ff; transform: none; }
 
       #claudeContextoInfo {
         font-family: 'JetBrains Mono', monospace;
         font-size: 10px;
-        color: #6c7086;
+        color: #8a909e;
         padding: 4px 14px;
-        background: #181825;
-        border-bottom: 1px solid #313244;
+        background: #f7f8fa;
+        border-bottom: 1px solid #e2e5ea;
         flex-shrink: 0;
         min-height: 20px;
       }
 
       #claudeChat {
-        flex: 1;
-        overflow-y: auto;
-        padding: 12px 14px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+        flex: 1; overflow-y: auto; padding: 12px 14px;
+        display: flex; flex-direction: column; gap: 10px;
+        background: #f8f9fa;
       }
       #claudeChat::-webkit-scrollbar        { width: 6px; }
-      #claudeChat::-webkit-scrollbar-track  { background: #181825; }
-      #claudeChat::-webkit-scrollbar-thumb  { background: #45475a; border-radius: 3px; }
+      #claudeChat::-webkit-scrollbar-track  { background: #f0f0f0; }
+      #claudeChat::-webkit-scrollbar-thumb  { background: #c0c0c0; border-radius: 3px; }
 
       .claude-msg {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        max-width: 92%;
+        display: flex; flex-direction: column; gap: 3px; max-width: 92%;
       }
-      .claude-msg.usuario { align-self: flex-end; }
+      .claude-msg.usuario   { align-self: flex-end; }
       .claude-msg.asistente { align-self: flex-start; }
 
       .claude-msg-label {
-        font-size: 9px;
-        color: #6c7086;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        padding: 0 4px;
+        font-size: 9px; color: #888; letter-spacing: 0.06em;
+        text-transform: uppercase; padding: 0 4px;
       }
       .claude-msg.usuario .claude-msg-label { text-align: right; }
 
       .claude-msg-burbuja {
-        padding: 8px 12px;
-        border-radius: 8px;
-        line-height: 1.6;
-        white-space: pre-wrap;
-        word-break: break-word;
-        font-size: 12px;
+        padding: 8px 12px; border-radius: 10px;
+        line-height: 1.6; white-space: pre-wrap;
+        word-break: break-word; font-size: 12px;
       }
-      .claude-msg.usuario   .claude-msg-burbuja {
-        background: #313244;
-        border: 1px solid #45475a;
-        color: #cdd6f4;
+      .claude-msg.usuario .claude-msg-burbuja {
+        background: #3b6ef8; color: #fff;
         border-bottom-right-radius: 2px;
       }
       .claude-msg.asistente .claude-msg-burbuja {
-        background: #1e1e2e;
-        border: 1px solid #cba6f7;
-        color: #cdd6f4;
+        background: #ffffff; color: #111;
+        border: 1px solid #e2e5ea;
         border-bottom-left-radius: 2px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
       }
 
       /* Cursor parpadeante mientras stream */
@@ -744,8 +732,8 @@
         display: flex;
         gap: 8px;
         padding: 10px 12px;
-        background: #181825;
-        border-top: 1px solid #45475a;
+        background: #ffffff;
+        border-top: 1px solid #e2e5ea;
         flex-shrink: 0;
         align-items: flex-end;
       }
@@ -754,40 +742,43 @@
         flex: 1;
         font-family: 'JetBrains Mono', monospace;
         font-size: 12px;
-        background: #313244;
-        border: 1px solid #45475a;
-        border-radius: 8px;
-        color: #cdd6f4;
-        padding: 8px 10px;
+        background: #f7f8fa;
+        border: 1px solid #e2e5ea;
+        border-radius: 10px;
+        color: #111318;
+        padding: 8px 12px;
         outline: none;
         resize: none;
         min-height: 36px;
         max-height: 120px;
         line-height: 1.5;
-        transition: border-color 0.15s;
+        transition: border-color 0.15s, box-shadow 0.15s;
       }
-      #claudeInput:focus { border-color: #cba6f7; }
+      #claudeInput:focus {
+        border-color: #3b6ef8;
+        box-shadow: 0 0 0 3px rgba(59,110,248,0.1);
+        background: #ffffff;
+      }
 
       #claudeEnviar {
         font-family: 'JetBrains Mono', monospace;
         font-size: 12px;
         padding: 8px 14px;
         margin: 0;
-        border-radius: 8px;
-        border: 1px solid #cba6f7;
-        background: #cba6f7;
-        color: #1e1e2e;
+        border-radius: 10px;
+        border: none;
+        background: #3b6ef8;
+        color: #ffffff;
         cursor: pointer;
-        font-weight: bold;
+        font-weight: 600;
         flex-shrink: 0;
         align-self: flex-end;
         transition: background 0.15s;
       }
-      #claudeEnviar:hover   { background: #b48ead; transform: none; }
+      #claudeEnviar:hover   { background: #2554d4; transform: none; }
       #claudeEnviar:disabled {
-        background: #45475a;
-        border-color: #45475a;
-        color: #6c7086;
+        background: #d0d4db;
+        color: #8a909e;
         cursor: not-allowed;
         transform: none;
       }
@@ -1172,13 +1163,19 @@
         </div>
 
         <div id="claudeAcciones">
-          <button onclick="claudeContexto('todo')">📄 Todo el código</button>
-          <button onclick="claudeContexto('seleccion')">✂️ Selección</button>
-          <button onclick="claudeContexto('errores')">🔍 Revisar errores</button>
-          <button onclick="claudeContexto('mejorar')">✨ Sugerir mejoras</button>
-          <button onclick="guardarHistorialKV()">☁️ Guardar</button>
-          <button onclick="cargarHistorialKV()">📂 Cargar</button>
-          <button onclick="claudeLimpiar()">🗑️ Limpiar chat</button>
+          <select onchange="claudeAccionContexto(this.value);this.value=''">
+            <option value="">📄 Contexto…</option>
+            <option value="todo">📄 Todo el código</option>
+            <option value="seleccion">✂️ Selección</option>
+            <option value="errores">🔍 Revisar errores</option>
+            <option value="mejorar">✨ Sugerir mejoras</option>
+          </select>
+          <select onchange="claudeAccionHistorial(this.value);this.value=''">
+            <option value="">☁️ Historial…</option>
+            <option value="guardar">☁️ Guardar</option>
+            <option value="cargar">📂 Cargar</option>
+            <option value="limpiar">🗑️ Limpiar chat</option>
+          </select>
         </div>
 
         <div id="claudeContextoInfo">Sin contexto cargado</div>
@@ -1229,7 +1226,10 @@ REGLAS IMPORTANTES para bloques JS:
 - Si el bloque contiene variables/constantes globales, enciérralas entre <!-- js inicio variable gobales --> y <!-- js fin variables -->
 - Estos delimitadores van en su propia línea, DENTRO del bloque.
 - Nunca omitas los delimitadores en código JS.
-- Para HTML y CSS puedes usar bloques markdown normales.`;
+- Para HTML y CSS puedes usar bloques markdown normales.
+- Para indicar una Busqueda para reemplazar sigue las siguie el siguiente formato: **start** **Buscar** + código a buscar + **Reemplazar** + código nuevo + **end**
+`      
+      ;
 
 
       const WORKER_KEY    = '_cf_worker_url';
@@ -2000,7 +2000,8 @@ REGLAS IMPORTANTES para bloques JS:
       ============================================================ */
 
       let _claudeHistorial  = []; // { role, content }
-      let _claudeContexto   = ""; // código cargado como contexto
+      let _claudeContexto     = ""; // código cargado como contexto
+      let _claudeContextoTipo = ""; // "todo" | "seleccion" | ""
       let _claudeStreaming   = false;
       let _claudeModelo     = "deepseek";
       let _modeloOR         = "qwen/qwen3-235b-a22b:free";
@@ -2084,20 +2085,33 @@ REGLAS IMPORTANTES para bloques JS:
       function cerrarClaude() {
         document.getElementById("modalClaude1").classList.remove("visible");
       }
+      
+      function claudeAccionContexto(val) {
+        if (val) claudeContexto(val);
+      }
+      
+      function claudeAccionHistorial(val) {
+        if (val === 'guardar') guardarHistorialKV();
+        else if (val === 'cargar') cargarHistorialKV();
+        else if (val === 'limpiar') claudeLimpiar();
+      }
 
       function claudeContexto(tipo) {
         const info = document.getElementById("claudeContextoInfo");
         if (tipo === "todo") {
-          _claudeContexto = editor.getValue();
+          _claudeContexto     = editor.getValue();
+          _claudeContextoTipo = "todo";
           info.textContent = `📄 Código completo — ${editor.lineCount()} líneas · ${_claudeContexto.length} chars`;
         } else if (tipo === "seleccion") {
           const sel = editor.getSelection();
           if (!sel || !sel.trim()) {
             info.textContent = "⚠️ No hay texto seleccionado en el editor";
-            _claudeContexto = "";
+            _claudeContexto     = "";
+            _claudeContextoTipo = "";
             return;
           }
-          _claudeContexto = sel;
+          _claudeContexto     = sel;
+          _claudeContextoTipo = "seleccion";
           info.textContent = `✂️ Selección — ${sel.split("\n").length} líneas · ${sel.length} chars`;
         } else if (tipo === "errores") {
           _claudeContexto = editor.getValue();
@@ -2141,7 +2155,10 @@ REGLAS IMPORTANTES para bloques JS:
 
         let contenidoUsuario = pregunta;
         if (_claudeContexto) {
-          contenidoUsuario = `Contexto del código:\n\`\`\`\n${_claudeContexto}\n\`\`\`\n\nConsulta: ${pregunta}`;
+          // Si el contexto era "todo el código", refrescar con la versión actual del editor
+          const codigoActual = editor.getValue();
+          const contextoFinal = (_claudeContexto === _claudeContextoTipo) ? codigoActual : _claudeContexto;
+          contenidoUsuario = `Contexto del código:\n\`\`\`\n${contextoFinal}\n\`\`\`\n\nConsulta: ${pregunta}`;
         }
 
         agregarBurbuja("usuario", pregunta);
@@ -2165,6 +2182,7 @@ REGLAS IMPORTANTES para bloques JS:
           burbujaAsistente.value = textoRespuesta;
           if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
           if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
+          if (burbujaAsistente._btnBR)     burbujaAsistente._btnBR.style.display     = "inline-block";
           _claudeStreaming = false;
           document.getElementById("claudeEnviar").disabled = false;
           document.getElementById("claudeInput").focus();
@@ -2275,6 +2293,7 @@ REGLAS IMPORTANTES para bloques JS:
           burbujaAsistente.style.borderColor = "#f38ba8";
           if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
           if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
+          if (burbujaAsistente._btnBR)     burbujaAsistente._btnBR.style.display     = "inline-block";
           _claudeHistorial.pop();
           _claudeStreaming = false;
           document.getElementById("claudeEnviar").disabled = false;
@@ -2303,12 +2322,13 @@ REGLAS IMPORTANTES para bloques JS:
         if (esAsistente) {
           burbuja.style.cssText = `
             width:100%; min-height:60px; resize:vertical;
-            background:#1e1e2e; color:#cdd6f4;
-            border:1px solid #cba6f7; border-radius:8px;
+            background:#ffffff; color:#111318;
+            border:1px solid #e2e5ea; border-radius:10px;
             border-bottom-left-radius:2px;
             padding:8px 12px; font-family:'JetBrains Mono',monospace;
             font-size:12px; line-height:1.6; outline:none;
             box-sizing:border-box; field-sizing:content;
+            box-shadow:0 1px 4px rgba(0,0,0,0.06);
           `;
           if (!vacia) burbuja.value = texto;
         } else {
@@ -2434,8 +2454,160 @@ REGLAS IMPORTANTES para bloques JS:
             msg.appendChild(smartDiv);
             document.getElementById("claudeChat").scrollTop = document.getElementById("claudeChat").scrollHeight;
           };
-          burbuja._btnSmart = btnSmart;
-          msg.appendChild(btnSmart);
+          // Botón extraer pares Busca/Reemplaza
+          const btnBR = document.createElement("button");
+          btnBR.textContent = "🔍 Buscar→Reemplazar";
+          btnBR.title = "Extraer pares busca/reemplaza de la respuesta";
+          btnBR.style.cssText = `
+            background:none; border:1px solid #45475a; border-radius:4px;
+            color:#6c7086; font-size:10px; padding:2px 6px; margin-top:4px; margin-left:4px;
+            cursor:pointer; align-self:flex-start; display:${vacia ? "none" : "inline-block"};
+            transition:color .15s, border-color .15s;
+          `;
+          btnBR.onmouseenter = () => { btnBR.style.color="#a6e3a1"; btnBR.style.borderColor="#a6e3a1"; };
+          btnBR.onmouseleave = () => { btnBR.style.color="#6c7086"; btnBR.style.borderColor="#45475a"; };
+          btnBR.onclick = () => {
+            const texto = burbuja.value || burbuja.textContent || "";
+            if (!texto.trim()) return;
+
+            const yaExiste = msg.querySelector(".br-render");
+            if (yaExiste) { yaExiste.remove(); btnBR.textContent = "🔍 Buscar→Reemplazar"; return; }
+            btnBR.textContent = "✖️ Cerrar";
+
+            const pares = [];
+            let m;
+
+            // Formato principal: **start** ... **Buscar** ```...``` **Reemplazar** ```...``` **end**
+            const RE_BLOQUE_START = /\*\*start\*\*[\s\S]*?\*\*end\*\*/gi;
+            const bloques = texto.match(RE_BLOQUE_START) || [];
+            bloques.forEach(bloque => {
+              // Extraer contenido del primer bloque de código (Buscar)
+              const RE_CODE = /```[^\n]*\n([\s\S]*?)```/g;
+              const codigos = [];
+              let mc;
+              while ((mc = RE_CODE.exec(bloque)) !== null) {
+                codigos.push(mc[1]);
+              }
+              if (codigos.length >= 2) {
+                pares.push({ busca: codigos[0], reemplaza: codigos[1] });
+              } else if (codigos.length === 1) {
+                // Solo un bloque — buscar Reemplazar como texto plano
+                const mR = bloque.match(/\*\*Reemplazar\*\*\s*([\s\S]*?)(?:\*\*end\*\*|$)/i);
+                if (mR) pares.push({ busca: codigos[0], reemplaza: mR[1].trim() });
+              }
+            });
+
+            // Fallback 1: Buscar: ```...``` Reemplazar: ```...```
+            if (!pares.length) {
+              const RE2 = /\*\*Buscar?\*\*\s*```[^\n]*\n([\s\S]*?)```[\s\S]*?\*\*Reemplazar?\*\*\s*```[^\n]*\n([\s\S]*?)```/gi;
+              while ((m = RE2.exec(texto)) !== null) {
+                pares.push({ busca: m[1], reemplaza: m[2] });
+              }
+            }
+
+            // Fallback 2: Busca: ... Reemplaza por: ...
+            if (!pares.length) {
+              const RE3 = /Busca(?:r)?:\s*```[^\n]*\n([\s\S]*?)```[\s\S]*?Reemplaza(?:\s+por)?:\s*```[^\n]*\n([\s\S]*?)```/gi;
+              while ((m = RE3.exec(texto)) !== null) {
+                pares.push({ busca: m[1], reemplaza: m[2] });
+              }
+            }
+
+            const brDiv = document.createElement("div");
+            brDiv.className = "br-render";
+            brDiv.style.cssText = "margin-top:8px;display:flex;flex-direction:column;gap:8px;";
+
+            if (!pares.length) {
+              const aviso = document.createElement("div");
+              aviso.style.cssText = "font-size:11px;color:#f38ba8;padding:6px 10px;border:1px solid #f38ba8;border-radius:6px;";
+              aviso.textContent = "⚠️ No se encontraron pares Busca/Reemplaza en la respuesta.";
+              brDiv.appendChild(aviso);
+            } else {
+              pares.forEach((par, idx) => {
+                const wrap = document.createElement("div");
+                wrap.style.cssText = "border:1px solid #45475a;border-radius:8px;overflow:hidden;";
+
+                // Header con botón aplicar
+                const hdr = document.createElement("div");
+                hdr.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:#181825;font-size:10px;color:#6c7086;";
+                hdr.innerHTML = `<span>Par ${idx+1} de ${pares.length}</span>`;
+
+                const btnAplicar = document.createElement("button");
+                btnAplicar.textContent = "⚡ Aplicar";
+                btnAplicar.style.cssText = "background:#a6e3a1;color:#1e1e2e;border:none;border-radius:4px;font-size:10px;padding:2px 8px;cursor:pointer;font-weight:bold;";
+                btnAplicar.onclick = () => {
+                  const contenido   = editor.getValue();
+                  const buscarTexto = par.busca.trim();
+                  if (!contenido.includes(buscarTexto)) {
+                    btnAplicar.textContent = "❌ No encontrado";
+                    btnAplicar.style.background = "#f38ba8";
+                    setTimeout(() => { btnAplicar.textContent = "⚡ Aplicar"; btnAplicar.style.background = "#a6e3a1"; }, 2000);
+                    return;
+                  }
+                  const nuevo = contenido.split(buscarTexto).join(par.reemplaza.trim());
+                  editor.setValue(nuevo);
+                  btnAplicar.textContent = "✅ Aplicado";
+                  btnAplicar.style.background = "#89b4fa";
+                  setTimeout(() => { btnAplicar.textContent = "⚡ Aplicar"; btnAplicar.style.background = "#a6e3a1"; }, 2000);
+                };
+                // Botón copiar Buscar
+                const btnCopiarB = document.createElement("button");
+                btnCopiarB.textContent = "📋 B";
+                btnCopiarB.title = "Copiar texto a buscar";
+                btnCopiarB.style.cssText = "background:none;border:1px solid #45475a;border-radius:4px;color:#f38ba8;font-size:10px;padding:2px 6px;cursor:pointer;margin-right:4px;";
+                btnCopiarB.onclick = () => {
+                  navigator.clipboard.writeText(par.busca.trim())
+                    .then(() => { btnCopiarB.textContent="✅ B"; setTimeout(()=>btnCopiarB.textContent="📋 B",1500); })
+                    .catch(()=>{});
+                };
+
+                // Botón copiar Reemplazar
+                const btnCopiarR = document.createElement("button");
+                btnCopiarR.textContent = "📋 R";
+                btnCopiarR.title = "Copiar texto de reemplazo";
+                btnCopiarR.style.cssText = "background:none;border:1px solid #45475a;border-radius:4px;color:#a6e3a1;font-size:10px;padding:2px 6px;cursor:pointer;margin-right:4px;";
+                btnCopiarR.onclick = () => {
+                  navigator.clipboard.writeText(par.reemplaza.trim())
+                    .then(() => { btnCopiarR.textContent="✅ R"; setTimeout(()=>btnCopiarR.textContent="📋 R",1500); })
+                    .catch(()=>{});
+                };
+
+                hdr.appendChild(btnCopiarB);
+                hdr.appendChild(btnCopiarR);
+                hdr.appendChild(btnAplicar);       
+                wrap.appendChild(hdr);
+
+                // Busca
+                const lblB = document.createElement("div");
+                lblB.style.cssText = "font-size:9px;color:#f38ba8;padding:4px 10px 0;background:#1e1e2e;letter-spacing:.06em;text-transform:uppercase;";
+                lblB.textContent = "Busca";
+                const taB = document.createElement("textarea");
+                taB.value = par.busca.trim();
+                taB.style.cssText = "width:100%;min-height:40px;background:#1e1e2e;color:#f38ba8;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;padding:6px 10px;border:none;border-bottom:1px solid #45475a;outline:none;resize:vertical;box-sizing:border-box;field-sizing:content;";
+                taB.oninput = () => { par.busca = taB.value; };
+
+                // Reemplaza
+                const lblR = document.createElement("div");
+                lblR.style.cssText = "font-size:9px;color:#a6e3a1;padding:4px 10px 0;background:#1e1e2e;letter-spacing:.06em;text-transform:uppercase;";
+                lblR.textContent = "Reemplaza por";
+                const taR = document.createElement("textarea");
+                taR.value = par.reemplaza.trim();
+                taR.style.cssText = "width:100%;min-height:40px;background:#1e1e2e;color:#a6e3a1;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;padding:6px 10px;border:none;outline:none;resize:vertical;box-sizing:border-box;field-sizing:content;";
+                taR.oninput = () => { par.reemplaza = taR.value; };
+
+                wrap.appendChild(lblB);
+                wrap.appendChild(taB);
+                wrap.appendChild(lblR);
+                wrap.appendChild(taR);
+                brDiv.appendChild(wrap);
+              });
+            }
+
+            msg.appendChild(brDiv);
+            document.getElementById("claudeChat").scrollTop = document.getElementById("claudeChat").scrollHeight;
+          };
+          burbuja._btnBR = btnBR;
+          msg.appendChild(btnBR);
         }
 
         chat.appendChild(msg);
