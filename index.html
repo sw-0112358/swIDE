@@ -604,9 +604,10 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 12px 14px 8px;
+        padding: 8px 14px 12px;
         flex-shrink: 0;
-        border-bottom: 1px solid rgba(200, 200, 220, 0.3);
+        border-top: 1px solid rgba(200, 200, 220, 0.3);
+        order: 999;
       }
       #panelArbol-header span {
         font-family: 'JetBrains Mono', monospace;
@@ -1047,17 +1048,17 @@
     <button type="button" class="collapsible" onclick="traslape()">⚙️</button>
 
     <!-- PANEL ÁRBOL DE FUNCIONES -->
-    <div id="panelArbol">
-      <div id="panelArbol-header">
-        <span>📑 ÍNDICE</span>
-        <button type="button" class="bottonV2" onclick="cerrarArbol()" title="Cerrar">✖️</button>
-      </div>
+    <div id="panelArbol" style="display:flex;flex-direction:column;">
       <input id="panelArbol-buscar" type="text" placeholder="Filtrar…"
              oninput="filtrarArbol(this.value)">
       <div id="panelArbol-count"></div>
       <div id="panelArbol-scroll">
         <div class="arbol-vacio" id="arbol-vacio">Sin funciones detectadas</div>
         <div id="arbol-lista"></div>
+      </div>
+      <div id="panelArbol-header">
+        <span>📑 ÍNDICE</span>
+        <button type="button" class="bottonV2" onclick="cerrarArbol()" title="Cerrar">✖️</button>
       </div>
     </div>
 
@@ -2988,6 +2989,7 @@ Nota: Los números de linea son agregados de manera automática son para indicar
         document.getElementById("panelArbol").classList.add("abierto");
         document.getElementById("panelArbol-buscar").value = "";
         parsearYRenderArbol();
+        traslape();
       }
 
       function cerrarArbol() {
