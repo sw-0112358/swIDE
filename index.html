@@ -2332,7 +2332,8 @@ Nota: Los números de linea son agregados de manera automática son para indicar
         if (_claudeStreaming) return;
         _claudeStreaming = true;
 
-        document.getElementById("claudeVacio").style.display = "none";
+        const elVacio = document.getElementById("claudeVacio");
+        if (elVacio) elVacio.style.display = "none";
         document.getElementById("claudeEnviar").disabled = true;
 
         let contenidoUsuario = pregunta;
