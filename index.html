@@ -2341,7 +2341,6 @@ Nota: Los números de linea son agregados de manera automática son para indicar
         if (_claudeArchivo) {
           const ext = _claudeArchivo.nombre.split('.').pop().toLowerCase();
           contenidoUsuario += `\n\nArchivo adjunto: ${_claudeArchivo.nombre}\n\`\`\`${ext}\n${_claudeArchivo.contenido}\n\`\`\``;
-          // Limpiar adjunto tras enviar
           _claudeArchivo = null;
           const btn = document.getElementById('claude-btn-adjuntar');
           btn.textContent = '📎';
@@ -2363,9 +2362,6 @@ Nota: Los números de linea son agregados de manera automática son para indicar
           contenidoUsuario = `Contexto del código${esTodo ? ' (con números de línea)' : ''}:\n\`\`\`\n${contextoFinal}\n\`\`\`\n\nConsulta: ${pregunta}` +
             (contenidoUsuario !== pregunta ? '\n\n' + contenidoUsuario.replace(pregunta, '').trim() : '');
         }
-
-        // Truncar historial — máximo 20 mensajes (10 intercambios)
-        _claudeHistorial = truncarHistorial(_claudeHistorial, 20);
 
         agregarBurbuja("usuario", pregunta);
         const burbujaAsistente = agregarBurbuja("asistente", "", true);
@@ -2395,73 +2391,32 @@ Nota: Los números de linea son agregados de manera automática son para indicar
         };
 
         try {
-          _claudeHistorial.push({ role: "user", content: contenidoUsuario });
-
-          // ── Construir payload según modelo ──
-          let payload, parsearDelta;
-
+          // ── Parser de delta según modelo (el payload ya lo arma el Worker) ──
+          let parsearDelta;
           if (_claudeModelo === "claude") {
-            payload = {
-              model: "claude-sonnet-4-6", max_tokens: 4096, stream: true,
-              system: PromptIA(), messages: _claudeHistorial
-            };
             parsearDelta = (obj) => {
               if (obj.type === "content_block_delta" && obj.delta?.type === "text_delta")
                 return obj.delta.text;
               return "";
             };
-
-          } else if (_claudeModelo === "deepseek") {
-            const historialSinUltimo = _claudeHistorial.slice(0, -1);
-            payload = {
-              model: "deepseek-chat", stream: true,
-              messages: [
-                { role: "system", content: PromptIA() },
-                ...historialSinUltimo,
-                { role: "user", content: contenidoUsuario + PromptIA() }
-              ]
-            };
-            parsearDelta = (obj) => obj.choices?.[0]?.delta?.content || "";
-
-          } else if (_claudeModelo === "openrouter") {
-            payload = {
-              model: _modeloOR,
-              stream: true,
-              messages: [
-                { role: "system", content: PromptIA() },
-                ..._claudeHistorial.slice(0, -1),
-                { role: "user", content: contenidoUsuario }
-              ]
-            };
-            parsearDelta = (obj) => obj.choices?.[0]?.delta?.content || "";
-          } else { // gemini
-            const historialGemini = _claudeHistorial.slice(0, -1).map(m => ({
-              role: m.role === "assistant" ? "model" : "user",
-              parts: [{ text: m.content }]
-            }));
-            historialGemini.push({
-              role: "user",
-              parts: [{ text: contenidoUsuario + PromptIA() }]
-            });
-            payload = {
-              system_instruction: { parts: [{ text: PromptIA() }] },
-              contents: historialGemini,
-              generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
-            };
+          } else if (_claudeModelo === "gemini") {
             parsearDelta = (obj) => obj.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          } else { // deepseek, openrouter
+            parsearDelta = (obj) => obj.choices?.[0]?.delta?.content || "";
           }
 
-          // ── Un solo fetch para todos los modelos ──
+          // ── Un solo fetch — el Worker arma el payload con el historial del KV ──
           const response = await fetch(`${KV_BASE}/ai-proxy`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              id:           getHistorialId(),
-              configId:     getConfigId(),
-              modelo:       _claudeModelo,
-              modeloGemini: "gemini-2.5-flash",
-              modeloOR:     _modeloOR,
-              payload
+              id:            getHistorialId(),
+              configId:      getConfigId(),
+              modelo:        _claudeModelo,
+              modeloGemini:  "gemini-2.5-flash",
+              modeloOR:      _modeloOR,
+              mensaje:       contenidoUsuario,
+              promptSistema: PromptIA()
             })
           });
 
@@ -2491,7 +2446,6 @@ Nota: Los números de linea son agregados de manera automática son para indicar
             }
           }
 
-          _claudeHistorial.push({ role: "assistant", content: textoRespuesta });
           finalizarStream();
 
         } catch(err) {
@@ -2501,7 +2455,6 @@ Nota: Los números de linea son agregados de manera automática son para indicar
           if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
           if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
           if (burbujaAsistente._btnBR)     burbujaAsistente._btnBR.style.display     = "inline-block";
-          _claudeHistorial.pop();
           _claudeStreaming = false;
           document.getElementById("claudeEnviar").disabled = false;
           document.getElementById("claudeInput").focus();
@@ -2892,6 +2845,8 @@ Nota: Los números de linea son agregados de manera automática son para indicar
         return id;
       }
 
+      // El Worker guarda el historial automáticamente tras cada respuesta.
+      // Esta función queda como respaldo manual (ej. tras editar algo localmente).
       async function guardarHistorialKV() {
         if (_claudeHistorial.length === 0) {
           mostrarEstado("⚠️ Historial vacío");
@@ -2914,32 +2869,69 @@ Nota: Los números de linea son agregados de manera automática son para indicar
         }
       }
 
+      // Reconstruye las burbujas visuales desde el historial guardado en el Worker.
+      // _claudeHistorial aquí es solo para mostrar — el Worker es la fuente real
+      // que se usa al enviar el siguiente mensaje.
       async function cargarHistorialKV() {
+        _claudeStreaming    = false;
+        _claudeContexto     = "";
+        _claudeContextoTipo = "";
+        _claudeArchivo      = null;
+        document.getElementById("claudeEnviar").disabled = false;
+        document.getElementById("claudeContextoInfo").textContent = "Sin contexto cargado";
+        const btnAdj = document.getElementById('claude-btn-adjuntar');
+        if (btnAdj) {
+          btnAdj.textContent = '📎';
+          btnAdj.style.color = '#4a5060';
+          btnAdj.style.borderColor = '#e2e5ea';
+          btnAdj.onclick = () => document.getElementById('claude-file-input').click();
+        }
+
         try {
           const resp = await fetch(`${KV_BASE}/kv-load?id=${getHistorialId()}`);
-          const data = await resp.json();
-          if (Array.isArray(data) && data.length > 0) {
-            _claudeHistorial = data;
-            // Reconstruir burbujas en el chat
+          const raw  = await resp.json();
+          const data = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : null);
+
+          if (data && data.length > 0) {
+            let historialLimpio = data
+              .filter(m => m.role === 'user' || m.role === 'assistant')
+              .map(m => ({
+                role:    m.role,
+                content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
+              }));
+
+            const historialValido = [];
+            let ultimoRol = null;
+            for (const m of historialLimpio) {
+              if (m.role === ultimoRol) continue;
+              historialValido.push(m);
+              ultimoRol = m.role;
+            }
+            if (historialValido[0]?.role !== 'user') historialValido.shift();
+
+            _claudeHistorial = historialValido;
+
             const chat = document.getElementById("claudeChat");
             chat.innerHTML = "";
-            data.forEach(m => {
+            historialValido.forEach(m => {
               if (m.role === "user") {
-                // Mostrar solo la pregunta sin el bloque de contexto
-                const texto = m.content.includes("Consulta:") 
-                ? m.content.split("Consulta:").pop().trim()
-                : m.content;
+                const texto = m.content.includes("Consulta:")
+                  ? m.content.split("Consulta:").pop().trim()
+                  : m.content;
                 agregarBurbuja("usuario", texto);
               } else {
                 agregarBurbuja("asistente", m.content);
               }
             });
-            mostrarEstado(`☁️ Historial cargado — ${data.length} mensajes`);
+
+            mostrarEstado(`☁️ Historial cargado — ${historialValido.length} mensajes`);
+            document.getElementById("claudeChat").scrollTop =
+              document.getElementById("claudeChat").scrollHeight;
           } else {
             mostrarEstado("☁️ Sin historial guardado");
           }
         } catch(e) {
-          mostrarEstado("⚠️ Error al cargar historial");
+          mostrarEstado("⚠️ Error al cargar historial: " + e.message);
         }
       }
 
@@ -2951,15 +2943,26 @@ Nota: Los números de linea son agregados de manera automática son para indicar
 
 
       function claudeLimpiar() {
-        _claudeHistorial = [];
-        _claudeContexto  = "";
+        _claudeHistorial     = [];
+        _claudeContexto      = "";
+        _claudeContextoTipo  = "";
+        _claudeStreaming     = false;
+        _claudeArchivo       = null;
         eliminarHistorialKV();
+        document.getElementById("claudeEnviar").disabled = false;
         const chat = document.getElementById("claudeChat");
         chat.innerHTML = `<div class="claude-vacio" id="claudeVacio">
           <div class="icon">🤖</div>
           <p>Selecciona un contexto o escribe<br>tu consulta directamente</p>
-      </div>`;
+        </div>`;
         document.getElementById("claudeContextoInfo").textContent = "Sin contexto cargado";
+        const btnAdj = document.getElementById('claude-btn-adjuntar');
+        if (btnAdj) {
+          btnAdj.textContent = '📎';
+          btnAdj.style.color = '#4a5060';
+          btnAdj.style.borderColor = '#e2e5ea';
+          btnAdj.onclick = () => document.getElementById('claude-file-input').click();
+        }
       }
 
 
