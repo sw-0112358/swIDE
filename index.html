@@ -1745,6 +1745,24 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         try {
           const data = await githubProxy("leerArchivo", { repo: _githubRepoActivo, path });
           editor.setValue(data.contenido);
+
+          // Nombre de proyecto = nombre del repo (sin el usuario/owner)
+          const nombreRepo = _githubRepoActivo.split('/').pop();
+          document.getElementById("NombreProyecto").value = nombreRepo;
+
+          // Detectar extensión del archivo y aplicar mismo efecto que cargarArchivo()
+          const nombreArchivo = path.split('/').pop();
+          const ext = nombreArchivo.includes('.') ? '.' + nombreArchivo.split('.').pop().toLowerCase() : '';
+          const modeMap = { '.html':"htmlmixed", '.js':"javascript", '.css':"css", '.json':"application/json", '.md':"markdown" };
+          editor.setOption("mode", modeMap[ext] || "text/plain");
+
+          // Sincronizar el selector de extensión si existe una opción que coincida
+          const extSel = document.getElementById("extSelector");
+          if (extSel) {
+            const opcionExiste = Array.from(extSel.options).some(o => o.value === ext);
+            if (opcionExiste) extSel.value = ext;
+          }
+
           _githubArchivoOrigen = { repo: _githubRepoActivo, path };
           actualizarBotonSubirGithub();
           cerrarGithub();
