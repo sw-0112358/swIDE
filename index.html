@@ -740,6 +740,33 @@
       }
       .modalClaude.visible { display: flex; }
 
+      #githubBox {
+        width: 92%;
+        max-width: 480px;
+        height: 80vh;
+        max-height: 640px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      }
+
+      .github-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.13s;
+        color: #cdd6f4;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+      }
+      .github-item:hover { background: #313244; }
+      .github-item .icono { flex-shrink: 0; font-size: 16px; }
+      .github-item .nombre { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .github-item .meta { flex-shrink: 0; color: #6c7086; font-size: 10px; }
+
       #claudeBox {
         background: #ffffff; /* Fondo blanco */
         color: #333333; /* Color de texto oscuro para contrastar */
@@ -1124,6 +1151,7 @@
         <button type="button" class="bottonV2" onclick="toggleArbol()" title="Índice de funciones">📑</button>
         <button type="button" class="bottonV2" onclick="abrirClaude()" title="Claude IA">🤖</button>
         <button type="button" class="bottonV2" onclick="abrirConfig()" title="Configuración API">🔑</button>
+        <button type="button" class="bottonV2" id="btnGithub" onclick="abrirGithub()" title="GitHub">🐙</button>
 
       </div>
     </div>
@@ -1256,6 +1284,10 @@
             <input type="text" id="cfg-openrouter" placeholder="sk-or-…" autocomplete="off">       
           </div>
           <div class="config-grupo">
+            <div class="claude-msg-label">🐙 GITHUB TOKEN</div>
+            <input type="text" id="cfg-github" placeholder="github_pat_… o ghp_…" autocomplete="off">
+          </div>
+          <div class="config-grupo">
             <div class="claude-msg-label">🗄️ KV BASE URL</div>
             <input type="text" id="cfg-kv" placeholder="https://…workers.dev" autocomplete="off">
           </div>
@@ -1278,6 +1310,40 @@
 
         <div id="configFooter">
           <span>🔒 Keys guardadas en la nube · Nunca expuestas al navegador</span>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- MODAL GITHUB -->
+    <div class="modalClaude" id="modalGithub">
+      <div id="githubBox" style="display:flex;flex-direction:column;height:100%;background:#1e1e2e;">
+
+        <div id="githubHeader" style="display:flex;justify-content:space-between;align-items:center;
+                                       padding:12px 16px;border-bottom:1px solid #45475a;flex-shrink:0;">
+          <strong id="githubTitulo" style="color:#cdd6f4;font-size:14px;">🐙 GitHub — Repositorios</strong>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button type="button" id="githubBtnVolver" onclick="githubVolverARepos()"
+                    style="display:none;background:#313244;border:1px solid #45475a;color:#cdd6f4;
+                           border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;
+                           font-family:'JetBrains Mono',monospace;">⬅️ Repos</button>
+            <button type="button" onclick="cerrarGithub()"
+                    style="background:none;border:none;color:#cdd6f4;font-size:18px;cursor:pointer;">✕</button>
+          </div>
+        </div>
+
+        <div id="githubBuscador" style="padding:8px 16px;border-bottom:1px solid #313244;flex-shrink:0;">
+          <input type="text" id="githubFiltro" placeholder="Filtrar…" oninput="githubFiltrar(this.value)"
+                 style="width:100%;box-sizing:border-box;font-family:'JetBrains Mono',monospace;font-size:12px;
+                        background:#313244;border:1px solid #45475a;color:#cdd6f4;border-radius:6px;
+                        padding:7px 10px;outline:none;">
+        </div>
+
+        <div id="githubLista" style="flex:1;overflow-y:auto;padding:8px;">
+          <div id="githubEstado" style="color:#6c7086;font-size:12px;text-align:center;padding:20px;">
+            Cargando repositorios…
+          </div>
         </div>
 
       </div>
@@ -1447,6 +1513,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         document.getElementById("cfg-gemini").value     = '';
         document.getElementById("cfg-deepseek").value   = '';
         document.getElementById("cfg-openrouter").value = '';
+        document.getElementById("cfg-github").value     = '';
 
         // Consultar al Worker qué keys están guardadas (compartidas entre agentes)
         try {
@@ -1461,6 +1528,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
               cfg.deepseek   ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-cfc…";
             document.getElementById("cfg-openrouter").placeholder =
               cfg.openrouter ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-or-…";
+            document.getElementById("cfg-github").placeholder =
+              cfg.github     ? "✅ Guardada en la nube — pega nuevo para actualizar" : "github_pat_… o ghp_…";
           }
         } catch(e) {}
 
@@ -1484,6 +1553,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         const gemini     = document.getElementById("cfg-gemini").value.trim();
         const deepseek   = document.getElementById("cfg-deepseek").value.trim();
         const openrouter = document.getElementById("cfg-openrouter").value.trim();
+        const github     = document.getElementById("cfg-github").value.trim();
 
         if (kvVal) { CF_WORKER = kvVal; KV_BASE = kvVal; localStorage.setItem(WORKER_KEY, kvVal); }
 
@@ -1499,6 +1569,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           gemini:     gemini     || cfgActual.gemini     || '',
           deepseek:   deepseek   || cfgActual.deepseek   || '',
           openrouter: openrouter || cfgActual.openrouter || '',
+          github:     github     || cfgActual.github     || '',
           kv:         kvVal      || cfgActual.kv         || '',
         };
 
@@ -1536,16 +1607,181 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           await fetch(`${KV_BASE}/kv-delete?id=${getConfigId()}`);
           await fetch(`${KV_BASE}/kv-delete?id=${getPromptId()}`);
         } catch(e) {}
-        document.getElementById("cfg-anthropic").value = '';
-        document.getElementById("cfg-gemini").value    = '';
-        document.getElementById("cfg-deepseek").value  = '';
+        document.getElementById("cfg-anthropic").value  = '';
+        document.getElementById("cfg-gemini").value     = '';
+        document.getElementById("cfg-deepseek").value   = '';
+        document.getElementById("cfg-openrouter").value = '';
+        document.getElementById("cfg-github").value     = '';
 
         document.getElementById("cfg-kv").value        = '';
         document.getElementById("cfg-iaroll").value    = '';
         document.getElementById("configEstado").textContent = "🗑️ Configuración borrada";
         document.getElementById("configEstado").style.color = "#6c7086";
       }
+      
+      /* ============================================================
+         GITHUB — navegación de repos y archivos
+      ============================================================ */
+      let _githubRepos       = [];   // lista cruda de repos
+      let _githubArchivos     = [];  // lista cruda de archivos del repo abierto
+      let _githubVista        = 'repos'; // 'repos' | 'archivos'
+      let _githubRepoActivo   = null;    // full_name del repo abierto
+      let _githubArchivoOrigen = null;   // { repo, path } del archivo cargado al editor (para subir cambios)
 
+      async function githubProxy(accion, extra = {}) {
+        const resp = await fetch(`${KV_BASE}/github-proxy`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ configId: getConfigId(), accion, ...extra })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || "Error de GitHub");
+        return data;
+      }
+
+      async function abrirGithub() {
+        document.getElementById("modalGithub").classList.add("visible");
+        document.getElementById("githubFiltro").value = '';
+        await githubMostrarRepos();
+      }
+
+      function cerrarGithub() {
+        document.getElementById("modalGithub").classList.remove("visible");
+      }
+
+      async function githubMostrarRepos() {
+        _githubVista = 'repos';
+        document.getElementById("githubTitulo").textContent = "🐙 GitHub — Repositorios";
+        document.getElementById("githubBtnVolver").style.display = "none";
+        document.getElementById("githubFiltro").placeholder = "Filtrar repositorios…";
+        const lista = document.getElementById("githubLista");
+        lista.innerHTML = '<div id="githubEstado" style="color:#6c7086;font-size:12px;text-align:center;padding:20px;">Cargando repositorios…</div>';
+
+        try {
+          const data = await githubProxy("listarRepos");
+          _githubRepos = data.repos || [];
+          renderGithubRepos(_githubRepos);
+        } catch(e) {
+          lista.innerHTML = `<div style="color:#f38ba8;font-size:12px;text-align:center;padding:20px;">❌ ${e.message}</div>`;
+        }
+      }
+
+      function renderGithubRepos(repos) {
+        const lista = document.getElementById("githubLista");
+        if (!repos.length) {
+          lista.innerHTML = '<div style="color:#6c7086;font-size:12px;text-align:center;padding:20px;">Sin repositorios</div>';
+          return;
+        }
+        lista.innerHTML = '';
+        repos.forEach(r => {
+          const el = document.createElement("div");
+          el.className = "github-item";
+          const fecha = new Date(r.updated_at).toLocaleDateString();
+          el.innerHTML = `
+            <span class="icono">${r.private ? '🔒' : '📁'}</span>
+            <span class="nombre">${r.name}</span>
+            <span class="meta">${fecha}</span>`;
+          el.onclick = () => githubAbrirRepo(r.full_name);
+          lista.appendChild(el);
+        });
+      }
+
+      async function githubAbrirRepo(fullName) {
+        _githubVista      = 'archivos';
+        _githubRepoActivo = fullName;
+        document.getElementById("githubTitulo").textContent = `🐙 ${fullName}`;
+        document.getElementById("githubBtnVolver").style.display = "inline-block";
+        document.getElementById("githubFiltro").value = '';
+        document.getElementById("githubFiltro").placeholder = "Filtrar archivos…";
+        const lista = document.getElementById("githubLista");
+        lista.innerHTML = '<div style="color:#6c7086;font-size:12px;text-align:center;padding:20px;">Cargando archivos…</div>';
+
+        try {
+          const data = await githubProxy("arbol", { repo: fullName });
+          _githubArchivos = data.archivos || [];
+          renderGithubArchivos(_githubArchivos);
+        } catch(e) {
+          lista.innerHTML = `<div style="color:#f38ba8;font-size:12px;text-align:center;padding:20px;">❌ ${e.message}</div>`;
+        }
+      }
+
+      function renderGithubArchivos(archivos) {
+        const lista = document.getElementById("githubLista");
+        if (!archivos.length) {
+          lista.innerHTML = '<div style="color:#6c7086;font-size:12px;text-align:center;padding:20px;">Sin archivos</div>';
+          return;
+        }
+        lista.innerHTML = '';
+        archivos.forEach(a => {
+          const el = document.createElement("div");
+          el.className = "github-item";
+          const kb = a.size ? (a.size / 1024).toFixed(1) + ' KB' : '';
+          el.innerHTML = `
+            <span class="icono">📄</span>
+            <span class="nombre">${a.path}</span>
+            <span class="meta">${kb}</span>`;
+          el.onclick = () => githubCargarArchivo(a.path);
+          lista.appendChild(el);
+        });
+      }
+
+      function githubVolverARepos() {
+        githubMostrarRepos();
+      }
+
+      function githubFiltrar(texto) {
+        const q = texto.trim().toLowerCase();
+        if (_githubVista === 'repos') {
+          const filtrados = !q ? _githubRepos : _githubRepos.filter(r => r.name.toLowerCase().includes(q));
+          renderGithubRepos(filtrados);
+        } else {
+          const filtrados = !q ? _githubArchivos : _githubArchivos.filter(a => a.path.toLowerCase().includes(q));
+          renderGithubArchivos(filtrados);
+        }
+      }
+
+      async function githubCargarArchivo(path) {
+        try {
+          const data = await githubProxy("leerArchivo", { repo: _githubRepoActivo, path });
+          editor.setValue(data.contenido);
+          _githubArchivoOrigen = { repo: _githubRepoActivo, path };
+          actualizarBotonSubirGithub();
+          cerrarGithub();
+          mostrarEstado(`🐙 ${path} cargado desde ${_githubRepoActivo}`);
+        } catch(e) {
+          mostrarEstado("❌ Error al cargar archivo: " + e.message);
+        }
+      }
+
+      function actualizarBotonSubirGithub() {
+        const btn = document.getElementById("btnGithub");
+        if (!btn) return;
+        if (_githubArchivoOrigen) {
+          btn.textContent = "⬆️";
+          btn.title = `Subir cambios a ${_githubArchivoOrigen.repo}/${_githubArchivoOrigen.path}`;
+          btn.onclick = githubSubirCambios;
+        } else {
+          btn.textContent = "🐙";
+          btn.title = "GitHub";
+          btn.onclick = abrirGithub;
+        }
+      }
+
+      async function githubSubirCambios() {
+        if (!_githubArchivoOrigen) { abrirGithub(); return; }
+        const { repo, path } = _githubArchivoOrigen;
+        const mensaje = prompt(`Mensaje de commit para ${repo}/${path}:`, "Actualización desde EditorVisorIDE");
+        if (mensaje === null) return; // canceló
+
+        mostrarEstado("⏳ Subiendo a GitHub…");
+        try {
+          const contenido = editor.getValue();
+          await githubProxy("subirArchivo", { repo, path, contenido, mensaje });
+          mostrarEstado(`✅ Subido a ${repo}/${path}`);
+        } catch(e) {
+          mostrarEstado("❌ Error al subir: " + e.message);
+        }
+      }
 
       /* ============================================================
          CAMBIO DE TEMA
