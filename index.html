@@ -769,17 +769,21 @@
 
       #claudeAcciones {
         display: flex;
-        gap: 6px;
-        padding: 8px 12px;
+        gap: 5px;
+        padding: 8px 10px;
         background: #f7f8fa;
         border-bottom: 1px solid #e2e5ea;
         flex-shrink: 0;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+      }
+      #claudeAcciones select {
+        flex: 1;
+        min-width: 0;
       }
       #claudeAcciones button, #claudeAcciones select {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
-        padding: 5px 10px;
+        font-size: 10px;
+        padding: 5px 4px;
         margin: 0;
         border-radius: 6px;
         border: 1px solid #e2e5ea;
@@ -788,6 +792,7 @@
         cursor: pointer;
         transition: background 0.15s, border-color 0.15s, color 0.15s;
         outline: none;
+        text-overflow: ellipsis;
       }
       #claudeAcciones button:hover, #claudeAcciones select:hover {
         background: #eef1ff;
@@ -1300,8 +1305,8 @@
 
         <div id="claudeAcciones">
           <select id="claudeAgenteSelector" onchange="claudeAccionAgente(this.value);this.value=''">
-            <option value="">👩‍💼 Agente…</option>
-            <option value="cambiar_default">👩‍💼 default</option>
+            <option value="">Agente</option>
+            <option value="cambiar_default">default</option>
           </select>
           <select onchange="claudeAccionContexto(this.value);this.value=''">
             <option value="">📄 Contexto…</option>
@@ -1311,9 +1316,9 @@
             <option value="mejorar">✨ Sugerir mejoras</option>
           </select>
           <select onchange="claudeAccionHistorial(this.value);this.value=''">
-            <option value="">☁️ Historial…</option>
-            <option value="cargar">📂 Cargar</option>
-            <option value="limpiar">🗑️ Limpiar chat</option>
+            <option value="">☁️Cloudflare</option>
+            <option value="cargar">🧠 Cargar</option>
+            <option value="limpiar">Borrrar</option>
           </select>
         </div>
 
@@ -1374,11 +1379,9 @@ REGLAS IMPORTANTES para bloques JS:
 
 **start**
 **Buscar**
-**Linea de inicio: (número de línea donde inicia el código a buscar)**
 
 CODIGO
 
-**Linea final: (número de línea donde termina el código a buscar)**
 **Reemplazar**
 
 CODIGO NUEVO
@@ -1388,14 +1391,15 @@ CODIGO NUEVO
 Reglas importantes:
 - Un solo par buscar/reemplazar por bloque start/end.
 - El código dentro de \`\`\` debe ser exacto, sin resumir ni omitir partes.
-- Nunca pongas alternativas ni variantes dentro del mismo bloque.
+- Dentro de un mismo bloque start/end NUNCA propongas más de una opción de solución (por ejemplo, no escribas "puedes usar esto o esto otro"). Si hay varias formas posibles de resolverlo, elige una sola.
+- El texto de **Buscar** debe ser único y suficientemente para identificar un solo lugar/lugares exactos en el archivo. NUNCA uses fragmentos cortos o genéricos que puedan repetirse, como una sola llave "}", una línea en blanco, "});", o una variable común sin contexto. Si la línea que quieres modificar es corta o ambigua, incluye también 1-2 líneas de contexto antes y/o después (las que ya existen en el archivo, sin modificarlas) para que el bloque completo sea único en todo el código.
 - Si hay varios cambios, usa un bloque start/end separado para cada uno.
 
 
 IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español, responde en español. Sé conciso y evita divagaciones. Prioriza dar soluciones funcionales y bien explicadas.
 Nota: Los números de linea son agregados de manera automática son para indicar donde se encuentra cada línea en el código.
 `      
-      ;
+    ;
 
 
       const WORKER_KEY    = '_cf_worker_url';
@@ -2296,14 +2300,18 @@ Nota: Los números de linea son agregados de manera automática son para indicar
       function renderSelectorAgentes() {
         const sel = document.getElementById("claudeAgenteSelector");
         if (!sel || !_registroAgentes) return;
-        const activo = getAgenteActivoNombre();
-        sel.innerHTML = '<option value="">🧑‍💼 Agente…</option>';
+        const activo     = getAgenteActivoNombre();
+        const infoActivo = _registroAgentes.agentes[activo];
+        const nombreActivo = infoActivo ? (infoActivo.nombre || activo) : activo;
+
+        sel.innerHTML = `<option value="">Agen: ${nombreActivo}</option>`;
 
         Object.keys(_registroAgentes.agentes).forEach(nombre => {
+          if (nombre === activo) return; // ya se muestra como opción seleccionada arriba
           const info = _registroAgentes.agentes[nombre];
           const opt  = document.createElement("option");
           opt.value  = `cambiar_${nombre}`;
-          opt.textContent = (nombre === activo ? "✅ " : "🧑‍💼 ") + (info.nombre || nombre);
+          opt.textContent = "🧑‍💼 " + (info.nombre || nombre);
           sel.appendChild(opt);
         });
 
@@ -2369,7 +2377,7 @@ Nota: Los números de linea son agregados de manera automática son para indicar
           await cargarConfig();
           await cargarHistorialKV();
           renderSelectorAgentes();
-          mostrarEstado("🗑️ Agente eliminado");
+          mostrarEstado("Agente eliminado");
           return;
         }
 
@@ -2392,7 +2400,7 @@ Nota: Los números de linea son agregados de manera automática son para indicar
           await cargarConfig();        // prompt del nuevo agente
           await cargarHistorialKV();   // historial del nuevo agente
           renderSelectorAgentes();
-          mostrarEstado(`🧑‍💼 Agente activo: ${_registroAgentes.agentes[clave].nombre}`);
+          mostrarEstado(`Agente activo: ${_registroAgentes.agentes[clave].nombre}`);
         }
       }
 
@@ -2400,9 +2408,14 @@ Nota: Los números de linea son agregados de manera automática son para indicar
         if (val) claudeContexto(val);
       }
 
-      function claudeAccionHistorial(val) { 
-        if (val === 'cargar') cargarHistorialKV();
-        else if (val === 'limpiar') claudeLimpiar();
+      function claudeAccionHistorial(val) {
+        if (val === 'cargar') {
+          cargarHistorialKV();
+        } else if (val === 'limpiar') {
+          if (confirm("¿Borrar todo el historial de este agente? Esta acción no se puede deshacer.")) {
+            claudeLimpiar();
+          }
+        }
       }
 
       function claudeContexto(tipo) {
@@ -2762,6 +2775,16 @@ Nota: Los números de linea son agregados de manera automática son para indicar
             if (yaExiste) { yaExiste.remove(); btnBR.textContent = "🔍 Buscar→Reemplazar"; return; }
             btnBR.textContent = "✖️ Cerrar";
 
+            // Busca el texto en el editor y devuelve el número de línea (1-based) donde inicia
+            function calcularLineaEnEditor(textoBuscar) {
+              if (!textoBuscar) return null;
+              const contenido = editor.getValue();
+              const idx = contenido.indexOf(textoBuscar.trim());
+              if (idx === -1) return null;
+              // Contar saltos de línea hasta el índice encontrado
+              return contenido.slice(0, idx).split('\n').length;
+            }
+
             const pares = [];
             let m;
 
@@ -2772,12 +2795,6 @@ Nota: Los números de linea son agregados de manera automática son para indicar
               // Limpiar triple backtick si el agente las incluyó
               const bloqueClean = bloque.replace(/```[^\n]*/g, '```');
 
-              // Extraer líneas de inicio/fin
-              const mLineaB    = bloqueClean.match(/[Ll]i[nt]ea\s+de\s+inicio[:\s*]+(\d+)/);
-              const mLineaF    = bloqueClean.match(/[Ll]i[nt]ea\s+final[:\s*]+(\d+)/);
-              const lineaInicio = mLineaB ? parseInt(mLineaB[1]) : null;
-              const lineaFin    = mLineaF ? parseInt(mLineaF[1]) : null;
-
               // Intentar extraer con triple backtick
               const RE_CODE = /```\n([\s\S]*?)```/g;
               const codigos = [];
@@ -2786,19 +2803,22 @@ Nota: Los números de linea son agregados de manera automática son para indicar
                 codigos.push(mc[1]);
               }
 
-              // Fallback: extraer código entre **Buscar** y **Linea final:** sin backticks
+              // Fallback: extraer código entre **Buscar** y **Reemplazar** sin backticks
               if (codigos.length === 0) {
-                const mBuscar = bloqueClean.match(/\*\*Buscar\*\*[\s\S]*?\*\*Linea de inicio[^*]*\*\*([\s\S]*?)\*\*Linea final/i);
+                const mBuscar = bloqueClean.match(/\*\*Buscar\*\*\n([\s\S]*?)\*\*Reemplazar\*\*/i);
                 const mReemp  = bloqueClean.match(/\*\*Reemplazar\*\*\n([\s\S]*?)(?=\*\*end\*\*)/i);
                 if (mBuscar) codigos.push(mBuscar[1].trim());
                 if (mReemp)  codigos.push(mReemp[1].trim());
               }
 
+              // lineaInicio se calcula localmente al renderizar — buscando el texto en el editor
+              const lineaInicio = calcularLineaEnEditor(codigos[0]);
+
               if (codigos.length >= 2) {
-                pares.push({ busca: codigos[0], reemplaza: codigos[1], lineaInicio, lineaFin });
+                pares.push({ busca: codigos[0], reemplaza: codigos[1], lineaInicio });
               } else if (codigos.length === 1) {
                 // Reemplazar vacío — eliminar el código buscado
-                pares.push({ busca: codigos[0], reemplaza: '', lineaInicio, lineaFin });
+                pares.push({ busca: codigos[0], reemplaza: '', lineaInicio });
               }
             });
 
@@ -2836,7 +2856,7 @@ Nota: Los números de linea son agregados de manera automática son para indicar
                 const hdr = document.createElement("div");
                 hdr.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:#181825;font-size:10px;color:#6c7086;";
                 const infoLinea = par.lineaInicio
-                ? `<span style="color:#6c7086;font-size:9px;">Línea ${par.lineaInicio}${par.lineaFin ? '–'+par.lineaFin : ''}</span>`
+                ? `<span style="color:#6c7086;font-size:9px;">📍 Línea ${par.lineaInicio}</span>`
                 : '';
                 hdr.innerHTML = `<span style="display:flex;gap:8px;align-items:center;">Par ${idx+1} de ${pares.length} ${infoLinea}</span>`;
 
@@ -2852,28 +2872,14 @@ Nota: Los números de linea son agregados de manera automática son para indicar
                     setTimeout(() => { btnAplicar.textContent = "⚡ Aplicar"; btnAplicar.style.background = "#a6e3a1"; }, 2000);
                     return;
                   }
-                  // Confrontar línea de inicio con el editor
-                  if (par.lineaInicio) {
-                    const lineas       = contenido.split('\n');
-                    const lineaEditor  = (lineas[par.lineaInicio - 1] || '').trim();
-                    const primeraLinea = buscarTexto.split('\n')[0].trim();
-                    if (lineaEditor !== primeraLinea) {
-                      btnAplicar.textContent = "⚠️ Línea no coincide";
-                      btnAplicar.style.background = "#fab387";
-                      btnAplicar.title = `Agente dijo línea ${par.lineaInicio}: "${primeraLinea}"\nEditor tiene: "${lineaEditor}"`;
-                      setTimeout(() => {
-                        btnAplicar.textContent = "⚡ Aplicar";
-                        btnAplicar.style.background = "#a6e3a1";
-                        btnAplicar.title = "";
-                      }, 3000);
-                      // No bloquea — igual permite aplicar si el texto fue encontrado
-                    }
-                  }
+                  // Recalcular la línea real justo antes de aplicar (por si el código cambió)
+                  const lineaReal = calcularLineaEnEditor(buscarTexto);
+
                   const nuevo = contenido.split(buscarTexto).join(par.reemplaza.trim());
                   editor.setValue(nuevo);
-                  // Ir a la línea indicada por el agente
-                  if (par.lineaInicio) {
-                    const linea = Math.max(0, par.lineaInicio - 1);
+
+                  if (lineaReal) {
+                    const linea = Math.max(0, lineaReal - 1);
                     editor.setCursor({ line: linea, ch: 0 });
                     editor.scrollIntoView({ line: linea, ch: 0 }, 120);
                     editor.focus();
