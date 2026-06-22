@@ -1103,7 +1103,7 @@
     <div class="MenuFlotante">
       <div class="botones">
 
-        <input id="NombreProyecto" type="text" value="Proyecto1" onkeydown="nombreProyectoKeydown(event)">
+        <input id="NombreProyecto" type="text" value="Proyecto1">
 
         <select id="extSelector">
           <option value=".html" selected>*.html</option>
@@ -2005,13 +2005,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         cargarDesdeURL(valor);
       }
 
-      function nombreProyectoKeydown(e) {
-        if (e.key !== 'Enter') return;
-        const valor = document.getElementById('NombreProyecto').value.trim();
-        if (!/^https?:\/\//i.test(valor)) return;
-        e.preventDefault();
-        cargarDesdeURL(valor);
-      }
+      
+
 
       async function cargarDesdeURL(url) {
         // Cambiar nombre inmediatamente, antes del fetch
