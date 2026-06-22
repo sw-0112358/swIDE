@@ -204,7 +204,7 @@
 
       .active, .collapsible:hover { background-color: transparent; }
 
-      .menuFullPantalla {
+      .MenuFlotante {
         position: fixed;
         top: 50%;
         right: 20px;
@@ -227,13 +227,13 @@
         font-family: 'JetBrains Mono', monospace;
       }
 
-      .menuFullPantalla::-webkit-scrollbar {
+      .MenuFlotante::-webkit-scrollbar {
         width: 4px;
       }
-      .menuFullPantalla::-webkit-scrollbar-track {
+      .MenuFlotante::-webkit-scrollbar-track {
         background: transparent;
       }
-      .menuFullPantalla::-webkit-scrollbar-thumb {
+      .MenuFlotante::-webkit-scrollbar-thumb {
         background: rgba(0, 120, 215, 0.3);
         border-radius: 3px;
       }
@@ -1094,7 +1094,7 @@
     </div>
 
 
-    <div class="menuFullPantalla">
+    <div class="MenuFlotante">
       <div class="botones">
 
         <input id="NombreProyecto" type="text" value="Proyecto1">
@@ -1511,7 +1511,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       async function abrirConfig() {
-        document.querySelector(".menuFullPantalla").style.display = "none";
+        document.querySelector(".MenuFlotante").style.display = "none";
 
         // Cargar Worker URL del localStorage
         document.getElementById("cfg-kv").value    = localStorage.getItem(WORKER_KEY) || KV_BASE;
@@ -1552,7 +1552,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       function cerrarConfig() {
         document.getElementById("modalConfig").classList.remove("visible");
-        document.querySelector(".menuFullPantalla").style.display = "block";
+        document.querySelector(".MenuFlotante").style.display = "block";
       }
 
       async function guardarConfig() {
@@ -2026,7 +2026,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       function traslape() {
-        const menu = document.querySelector(".menuFullPantalla");
+        const menu = document.querySelector(".MenuFlotante");
         menu.style.display = menu.style.display === "none" ? "block" : "none";
       }
 
@@ -2399,7 +2399,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       let _buscarTexto   = "";   // Texto buscado actualmente
 
       function abrirMenuReemplazar() {
-        document.querySelector(".menuFullPantalla").style.display = "none";
+        document.querySelector(".MenuFlotante").style.display = "none";
         const m = document.getElementById("menuReemplazar");
         m.style.display = "flex";
         reiniciarMenuReemplazar();
@@ -2407,7 +2407,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       function cerrarMenuReemplazar() {
         document.getElementById("menuReemplazar").style.display = "none";
-        document.querySelector(".menuFullPantalla").style.display = "block";
+        document.querySelector(".MenuFlotante").style.display = "block";
       }
 
       function reiniciarMenuReemplazar() {
@@ -2617,7 +2617,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       function abrirClaude() {
         // Ocultar todos los demás paneles flotantes
-        document.querySelector(".menuFullPantalla").style.display = "none";
+        document.querySelector(".MenuFlotante").style.display = "none";
         document.getElementById("menuReemplazar").style.display   = "none";
         document.getElementById("modalDiff").classList.remove("visible");
         if (_arbolVisible) cerrarArbol();
