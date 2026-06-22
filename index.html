@@ -1103,7 +1103,7 @@
     <div class="MenuFlotante">
       <div class="botones">
 
-        <input id="NombreProyecto" type="text" value="Proyecto1">
+        <input id="NombreProyecto" type="text" value="Proyecto1" onkeydown="nombreProyectoKeydown(event)">
 
         <select id="extSelector">
           <option value=".html" selected>*.html</option>
@@ -1149,6 +1149,7 @@
         </select>
 
         <button type="button" class="bottonV2" onclick="cargarArchivo()">📂</button>
+        <button type="button" class="bottonV2" onclick="cargarDesdeNombre()" title="Cargar fuente desde URL">🌐</button>
         <button type="button" class="bottonV2" onclick="descargarArchivo()">💾</button>
         <button type="button" class="bottonV2" onclick="ejecutarArchivo()">▶️</button>
         <button type="button" class="bottonV2" onclick="guardarAlportapapeles()">📃</button>      
@@ -1993,6 +1994,51 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         const valor = (document.getElementById("NombreProyecto").value.trim()) || "archivo_editado";
         const ext   = document.getElementById("extSelector").value || ".html";
         return valor + ext;
+      }
+
+      function cargarDesdeNombre() {
+        const valor = document.getElementById('NombreProyecto').value.trim();
+        if (!/^https?:\/\//i.test(valor)) {
+          mostrarEstado('⚠️ El nombre debe ser una URL (https://…)');
+          return;
+        }
+        cargarDesdeURL(valor);
+      }
+
+      function nombreProyectoKeydown(e) {
+        if (e.key !== 'Enter') return;
+        const valor = document.getElementById('NombreProyecto').value.trim();
+        if (!/^https?:\/\//i.test(valor)) return;
+        e.preventDefault();
+        cargarDesdeURL(valor);
+      }
+
+      async function cargarDesdeURL(url) {
+        // Cambiar nombre inmediatamente, antes del fetch
+        try {
+          const host = new URL(url).hostname.replace(/^www\./, '');
+          document.getElementById('NombreProyecto').value = host;
+        } catch(e) {}
+
+        if (!KV_BASE) {
+          mostrarEstado('⚠️ Configura el Worker URL primero');
+          return;
+        }
+
+        mostrarEstado('⏳ Obteniendo fuente…');
+        try {
+          const base     = KV_BASE.replace(/\/$/, '');
+          const endpoint = base + '/raw?target=' + encodeURIComponent(url);
+          const resp     = await fetch(endpoint);
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          const buffer   = await resp.arrayBuffer();
+          const texto    = new TextDecoder('utf-8').decode(buffer);
+          editor.setValue(texto);
+          editor.setOption('mode', 'htmlmixed');
+          mostrarEstado('✅ Fuente cargada');
+        } catch(err) {
+          mostrarEstado('❌ ' + err.message);
+        }
       }
 
       function cargarArchivo() {
