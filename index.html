@@ -1295,22 +1295,20 @@
           <div class="config-grupo">
             <div class="claude-msg-label">🔑 ID DE SINCRONIZACIÓN</div>
             <div style="display:flex;gap:6px;align-items:stretch;">
-              <div id="cfg-idmadre-display"
-                   onclick="cambiarIdMadre()"
-                   style="font-family:'JetBrains Mono',monospace;font-size:11px;background:#f7f8fa;
-                          color:#4a5060;border:1px solid #e2e5ea;border-radius:6px;
-                          padding:8px 10px;cursor:pointer;word-break:break-all;flex:1;
-                          transition:border-color .15s,background .15s;"
-                   title="Toca para cambiar — pega aquí la ID de otro dispositivo para sincronizar">
-              </div>
+              <input type="text" id="cfg-idmadre-display"
+                     placeholder="Tu ID personalizada"
+                     autocomplete="off" spellcheck="false"
+                     style="font-family:'JetBrains Mono',monospace;font-size:11px;flex:1;
+                            background:#f7f8fa;color:#4a5060;border:1px solid #e2e5ea;
+                            border-radius:6px;padding:8px 10px;box-sizing:border-box;outline:none;">
               <button onclick="conectarID()"
-                      title="Conectar a una ID existente y descargar sus datos"
+                      title="Conectar a esta ID y descargar sus datos"
                       style="padding:8px 12px;font-size:15px;flex-shrink:0;
                              border-radius:6px;background:#f7f8fa;
                              color:#4a5060;border:1px solid #e2e5ea;">🔄</button>
             </div>
             <div style="font-size:10px;color:#6c7086;margin-top:4px;">
-              Toca la ID para cambiarla · 🔄 conecta y descarga datos de esa ID
+              Escribe tu ID · 🔄 conecta y descarga datos · 💾 Guardar para crear/actualizar
             </div>
           </div>
           <div class="config-grupo">
@@ -3329,59 +3327,18 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       
       function renderIdMadreDisplay() {
         const el = document.getElementById('cfg-idmadre-display');
-        if (el) el.textContent = getIdMadre();
+        if (el) el.value = getIdMadre();
       }
 
-      async function cambiarIdMadre() {
-        const actual = getIdMadre();
-        const nueva  = prompt(
-          "ID de sincronización actual:\n\n" + actual +
-          "\n\nPega aquí la ID de otro dispositivo para sincronizar todos tus agentes, historiales y prompts. Deja igual para mantener la actual:",
-          actual
-        );
-        if (nueva === null) return; // canceló
-        const limpia = nueva.trim();
-        if (!limpia || limpia === actual) return; // sin cambios
-
-        localStorage.setItem('_ide_id_madre', limpia);
-        renderIdMadreDisplay();
-
-        // Recargar todo bajo la nueva ID madre
-        document.getElementById("configEstado").textContent = "⏳ Sincronizando…";
-        document.getElementById("configEstado").style.color = "#fab387";
-
-        _registroAgentes = null;
-        await cargarRegistroAgentes();
-        setAgenteActivoNombre(AGENTE_DEFAULT);
-        renderSelectorAgentes();
-
-        // Recargar placeholders de API keys desde el configId del JSON maestro
-        try {
-          const resp = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
-          const cfg  = await resp.json();
-          if (cfg) {
-            document.getElementById("cfg-anthropic").placeholder  = cfg.anthropic  ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-ant-api03-…";
-            document.getElementById("cfg-gemini").placeholder     = cfg.gemini     ? "✅ Guardada en la nube — pega nueva para actualizar" : "AQ.Ab8…";
-            document.getElementById("cfg-deepseek").placeholder   = cfg.deepseek   ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-cfc…";
-            document.getElementById("cfg-openrouter").placeholder = cfg.openrouter ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-or-…";
-            document.getElementById("cfg-github").placeholder     = cfg.github     ? "✅ Guardada en la nube — pega nuevo para actualizar"  : "github_pat_… o ghp_…";
-          }
-        } catch(e) {}
-
-        await cargarConfig();
-        await cargarHistorialKV();
-
-        document.getElementById("configEstado").textContent = "✅ ID de sincronización actualizada";
-        document.getElementById("configEstado").style.color = "#a6e3a1";
-      }
+      function cambiarIdMadre() { /* reemplazado por campo de texto directo */ }
       
       async function conectarID() {
-        const idNueva = prompt(
-          "Pega la ID del otro dispositivo para conectarte a ella:",
-          getIdMadre()
-        );
-        if (!idNueva) return;
-        const limpia = idNueva.trim();
+        const limpia = (document.getElementById('cfg-idmadre-display')?.value || '').trim();
+        if (!limpia) {
+          document.getElementById("configEstado").textContent = "⚠️ Escribe una ID primero";
+          document.getElementById("configEstado").style.color = "#fab387";
+          return;
+        }
         if (!limpia || limpia === getIdMadre()) return;
 
         if (!KV_BASE) {
