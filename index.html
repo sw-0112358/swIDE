@@ -3403,14 +3403,9 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         return id;
       }
 
-      // ── ID de configuración (API keys) — compartida por todos los agentes ──
+      // ── ID de configuración (API keys) — derivada de la id madre para sincronización automática ──
       function getConfigId() {
-        let id = localStorage.getItem('_ide_config_id');
-        if (!id) {
-          id = 'cfg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-          localStorage.setItem('_ide_config_id', id);
-        }
-        return id;
+        return 'cfg_' + getIdMadre();
       }
 
       // ── Registro de agentes — vive bajo la ID madre en KV ──
