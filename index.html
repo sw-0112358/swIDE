@@ -1304,14 +1304,19 @@
           </div>
           <div class="config-grupo">
             <div class="claude-msg-label">🔑 ID DE SINCRONIZACIÓN</div>
-            <input type="text" id="cfg-idmadre-display"
-                   placeholder="Escribe tu ID personalizada o pega la de otro dispositivo"
-                   autocomplete="off" spellcheck="false"
-                   style="font-family:'JetBrains Mono',monospace;font-size:11px;width:100%;
-                          background:#313244;color:#cdd6f4;border:1px solid #45475a;
-                          border-radius:6px;padding:8px 10px;box-sizing:border-box;outline:none;">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="text" id="cfg-idmadre-display"
+                     placeholder="Escribe tu ID personalizada o pega la de otro dispositivo"
+                     autocomplete="off" spellcheck="false"
+                     style="font-family:'JetBrains Mono',monospace;font-size:11px;flex:1;
+                            background:#313244;color:#cdd6f4;border:1px solid #45475a;
+                            border-radius:6px;padding:8px 10px;box-sizing:border-box;outline:none;">
+              <button onclick="sincronizarID()" title="Cargar datos de esta ID desde la nube"
+                      style="padding:8px 12px;font-size:14px;flex-shrink:0;border-radius:6px;
+                             background:#313244;color:#89b4fa;border:1px solid #45475a;">🔄</button>
+            </div>
             <div style="font-size:10px;color:#6c7086;margin-top:4px;">
-              Elige un ID único (ej: <em>*****</em>). Se guarda al presionar Guardar.
+              Elige un ID único (ej: <em>*****</em>). Guardar sobreescribe · 🔄 descarga la nube.
             </div>
           </div>      
           <div class="config-grupo">
@@ -1645,6 +1650,37 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           document.getElementById("configEstado").textContent = "✅ Guardado · ID: " + idNueva;
           document.getElementById("configEstado").style.color = "#a6e3a1";
 
+        } catch(e) {
+          document.getElementById("configEstado").textContent = "❌ " + e.message;
+          document.getElementById("configEstado").style.color = "#f38ba8";
+        }
+      }
+
+      async function sincronizarID() {
+        const idNueva = document.getElementById("cfg-idmadre-display").value.trim();
+        const kvVal   = document.getElementById("cfg-kv").value.trim();
+        if (!idNueva) {
+          document.getElementById("configEstado").textContent = "⚠️ Escribe una ID primero";
+          document.getElementById("configEstado").style.color = "#fab387";
+          return;
+        }
+        if (kvVal) { CF_WORKER = kvVal; KV_BASE = kvVal; localStorage.setItem(WORKER_KEY, kvVal); }
+
+        document.getElementById("configEstado").textContent = "⏳ Sincronizando…";
+        document.getElementById("configEstado").style.color = "#fab387";
+
+        try {
+          // Aplicar la ID y cargar JSON maestro
+          setIdRaiz(idNueva);
+          _registroAgentes = null; // forzar recarga desde KV
+          await cargarRegistroAgentes();
+          setAgenteActivoNombre(AGENTE_DEFAULT);
+          renderSelectorAgentes();
+          await cargarConfig();
+          await cargarHistorialKV();
+
+          document.getElementById("configEstado").textContent = "✅ Sincronizado · ID: " + idNueva;
+          document.getElementById("configEstado").style.color = "#a6e3a1";
         } catch(e) {
           document.getElementById("configEstado").textContent = "❌ " + e.message;
           document.getElementById("configEstado").style.color = "#f38ba8";
