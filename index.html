@@ -3402,9 +3402,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       // ── IDs derivadas — todas nacen de la raíz ──
-      function getKeysId()      { return getIdRaiz() + '_keys'; }
-      function getHistorialId() { return getIdRaiz() + '_ia_' + getAgenteActivoNombre() + '_memory'; }
-      function getPromptId()    { return getIdRaiz() + '_ia_' + getAgenteActivoNombre() + '_prompt'; }
+      function getKeysId() { return getIdRaiz() + '_keys'; }
 
       // ── ID de configuración (API keys) — derivada de la id madre para sincronización automática ──
       function getConfigId() {
@@ -3424,9 +3422,21 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           _registroAgentes = { agentes: {} };
         }
         if (!_registroAgentes.agentes[AGENTE_DEFAULT]) {
-          _registroAgentes.agentes[AGENTE_DEFAULT] = { nombre: 'Asistente general' };
+          _registroAgentes.agentes[AGENTE_DEFAULT] = {
+            nombre:      'Asistente general',
+            historialId: 'hist_'   + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+            promptId:    'prompt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+          };
           guardarRegistroAgentes();
         }
+        // Migración: agentes existentes que no tienen IDs asignadas
+        let necesitaGuardar = false;
+        Object.keys(_registroAgentes.agentes).forEach(clave => {
+          const ag = _registroAgentes.agentes[clave];
+          if (!ag.historialId) { ag.historialId = 'hist_'   + Date.now() + '_' + Math.random().toString(36).slice(2, 8); necesitaGuardar = true; }
+          if (!ag.promptId)    { ag.promptId    = 'prompt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); necesitaGuardar = true; }
+        });
+        if (necesitaGuardar) guardarRegistroAgentes();
         return _registroAgentes;
       }
 
