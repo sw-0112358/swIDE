@@ -2119,10 +2119,10 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           }
 
           // Cargar en el editor
-          if (typeof cm !== 'undefined') {
-            cm.setValue(html);
-            cm.clearHistory();
-            cm.refresh();
+          if (typeof editor !== 'undefined') {
+            editor.setValue(html);
+            editor.clearHistory();
+            editor.refresh();
           }
 
           mostrarMsg('✅ SRC cargado — ' + html.length.toLocaleString() + ' chars');
