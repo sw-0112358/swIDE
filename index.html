@@ -1619,6 +1619,12 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             };
           }
 
+          // Asegurar que el JSON maestro tenga el keysId registrado
+          if (_registroAgentes) {
+            if (!_registroAgentes.keysId) _registroAgentes.keysId = getIdRaiz() + '_keys';
+            await guardarRegistroAgentes();
+          }
+
           // Guardar keys
           const respKeys = await fetch(`${KV_BASE}/kv-save`, {
             method: "POST",
@@ -3401,8 +3407,10 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         localStorage.setItem('_ide_id_raiz', id.trim());
       }
 
-      // ── IDs derivadas — todas nacen de la raíz ──
-      function getKeysId() { return getIdRaiz() + '_keys'; }
+      // ── IDs derivadas — se leen del JSON maestro ──
+      function getKeysId() {
+        return (_registroAgentes && _registroAgentes.keysId) ? _registroAgentes.keysId : getIdRaiz() + '_keys';
+      }
 
       // ── ID de configuración (API keys) — derivada de la id madre para sincronización automática ──
       function getConfigId() {
@@ -3415,13 +3423,13 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       const LS_AGENTES_KEY = '_ide_agentes';
 
       async function cargarRegistroAgentes() {
-        // Intentar cargar desde KV si hay ID raíz y Worker configurado
+        // Cargar JSON maestro desde KV usando la ID raíz
         if (KV_BASE && getIdRaiz()) {
           try {
-            const resp = await fetch(`${KV_BASE}/kv-load?id=${getIdRaiz()}_agentes`);
-            const data = await resp.json();
-            if (data && data.agentes) {
-              _registroAgentes = data;
+            const resp = await fetch(`${KV_BASE}/kv-load?id=${getIdRaiz()}`);
+            const maestro = await resp.json();
+            if (maestro && maestro.agentes) {
+              _registroAgentes = maestro;
               localStorage.setItem(LS_AGENTES_KEY, JSON.stringify(_registroAgentes));
             }
           } catch(e) { /* silencioso — caer al localStorage */ }
@@ -3435,6 +3443,10 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             _registroAgentes = { agentes: {} };
           }
         }
+        // Asegurar campos del JSON maestro
+        if (!_registroAgentes.keysId)    _registroAgentes.keysId    = getIdRaiz() + '_keys';
+        if (!_registroAgentes.agentesId) _registroAgentes.agentesId = getIdRaiz() + '_agentes';
+        if (!_registroAgentes.agentes)   _registroAgentes.agentes   = {};
         if (!_registroAgentes.agentes[AGENTE_DEFAULT]) {
           _registroAgentes.agentes[AGENTE_DEFAULT] = {
             nombre:      'Asistente general',
@@ -3443,7 +3455,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           };
           await guardarRegistroAgentes();
         }
-        // Migración: agentes existentes que no tienen IDs asignadas
+        // Migración: agentes existentes sin IDs
         let necesitaGuardar = false;
         Object.keys(_registroAgentes.agentes).forEach(clave => {
           const ag = _registroAgentes.agentes[clave];
@@ -3455,15 +3467,15 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       async function guardarRegistroAgentes() {
-        // Guardar en localStorage siempre
+        // Siempre guardar en localStorage
         try { localStorage.setItem(LS_AGENTES_KEY, JSON.stringify(_registroAgentes)); } catch(e) {}
-        // Guardar en KV si hay ID raíz y Worker configurado
+        // Guardar JSON maestro en KV bajo la ID raíz
         if (KV_BASE && getIdRaiz()) {
           try {
             await fetch(`${KV_BASE}/kv-save`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: getIdRaiz() + '_agentes', data: _registroAgentes })
+              body: JSON.stringify({ id: getIdRaiz(), data: _registroAgentes })
             });
           } catch(e) { /* silencioso */ }
         }
