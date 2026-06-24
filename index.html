@@ -3415,11 +3415,25 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       const LS_AGENTES_KEY = '_ide_agentes';
 
       async function cargarRegistroAgentes() {
-        try {
-          const raw = localStorage.getItem(LS_AGENTES_KEY);
-          _registroAgentes = raw ? JSON.parse(raw) : { agentes: {} };
-        } catch(e) {
-          _registroAgentes = { agentes: {} };
+        // Intentar cargar desde KV si hay ID raíz y Worker configurado
+        if (KV_BASE && getIdRaiz()) {
+          try {
+            const resp = await fetch(`${KV_BASE}/kv-load?id=${getIdRaiz()}_agentes`);
+            const data = await resp.json();
+            if (data && data.agentes) {
+              _registroAgentes = data;
+              localStorage.setItem(LS_AGENTES_KEY, JSON.stringify(_registroAgentes));
+            }
+          } catch(e) { /* silencioso — caer al localStorage */ }
+        }
+        // Fallback a localStorage
+        if (!_registroAgentes) {
+          try {
+            const raw = localStorage.getItem(LS_AGENTES_KEY);
+            _registroAgentes = raw ? JSON.parse(raw) : { agentes: {} };
+          } catch(e) {
+            _registroAgentes = { agentes: {} };
+          }
         }
         if (!_registroAgentes.agentes[AGENTE_DEFAULT]) {
           _registroAgentes.agentes[AGENTE_DEFAULT] = {
@@ -3427,7 +3441,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             historialId: 'hist_'   + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
             promptId:    'prompt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
           };
-          guardarRegistroAgentes();
+          await guardarRegistroAgentes();
         }
         // Migración: agentes existentes que no tienen IDs asignadas
         let necesitaGuardar = false;
@@ -3436,14 +3450,23 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           if (!ag.historialId) { ag.historialId = 'hist_'   + Date.now() + '_' + Math.random().toString(36).slice(2, 8); necesitaGuardar = true; }
           if (!ag.promptId)    { ag.promptId    = 'prompt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); necesitaGuardar = true; }
         });
-        if (necesitaGuardar) guardarRegistroAgentes();
+        if (necesitaGuardar) await guardarRegistroAgentes();
         return _registroAgentes;
       }
 
-      function guardarRegistroAgentes() {
-        try {
-          localStorage.setItem(LS_AGENTES_KEY, JSON.stringify(_registroAgentes));
-        } catch(e) {}
+      async function guardarRegistroAgentes() {
+        // Guardar en localStorage siempre
+        try { localStorage.setItem(LS_AGENTES_KEY, JSON.stringify(_registroAgentes)); } catch(e) {}
+        // Guardar en KV si hay ID raíz y Worker configurado
+        if (KV_BASE && getIdRaiz()) {
+          try {
+            await fetch(`${KV_BASE}/kv-save`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: getIdRaiz() + '_agentes', data: _registroAgentes })
+            });
+          } catch(e) { /* silencioso */ }
+        }
       }
 
       function getAgenteActivoNombre() {
