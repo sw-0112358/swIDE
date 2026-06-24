@@ -3375,7 +3375,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         const limpia = nueva.trim();
         if (!limpia || limpia === actual) return; // sin cambios
 
-        localStorage.setItem('_ide_id_madre', limpia);
+        localStorage.setItem('_ide_id_raiz', limpia);
         renderIdMadreDisplay();
 
         // Recargar todo bajo la nueva ID madre
@@ -3395,10 +3395,10 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       // ID único por dispositivo/navegador
       // ── ID madre — raíz de todo, sincronizable entre dispositivos ──
       function getIdMadre() {
-        let id = localStorage.getItem('_ide_id_madre');
+        let id = localStorage.getItem('_ide_id_raiz');
         if (!id) {
-          id = 'madre_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-          localStorage.setItem('_ide_id_madre', id);
+          id = 'ID_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+          localStorage.setItem('_ide_id_raiz', id);
         }
         return id;
       }
