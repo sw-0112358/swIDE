@@ -2103,6 +2103,21 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           if (!resp.ok) throw new Error('HTTP ' + resp.status);
           const html = await resp.text();
 
+          // Forzar extensión .html si el selector no la tiene
+          const extSel = document.getElementById('extSelector');
+          if (extSel && extSel.value !== '.html') extSel.value = '.html';
+
+          // Poner nombre de archivo basado en la URL
+          const nombreSel = document.getElementById('NombreProyecto');
+          if (nombreSel) {
+            try {
+              const u = new URL(url.trim());
+              const segmento = u.pathname.split('/').filter(Boolean).pop() || u.hostname;
+              const sinExt   = segmento.replace(/\.[^.]+$/, '');
+              nombreSel.value = sinExt || 'pagina';
+            } catch(e) { nombreSel.value = 'pagina'; }
+          }
+
           // Cargar en el editor
           if (typeof cm !== 'undefined') {
             cm.setValue(html);
