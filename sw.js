@@ -12,18 +12,21 @@ self.addEventListener("fetch", event => {
       event.respondWith(
         fetch(target, {
           credentials: 'include',
+          mode: 'no-cors',
           headers: {
             'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'es-ES,es;q=0.9',
-            'Referer':         'https://es.novelcool.com/',
           }
-        }).then(resp => new Response(resp.body, {
-          status:  resp.status,
-          headers: {
-            'Content-Type':                resp.headers.get('content-type') || 'text/html',
-            'Access-Control-Allow-Origin': '*',
-          }
-        })).catch(err => new Response('Error: ' + err.message, { status: 500 }))
+        }).then(resp => {
+          // no-cors devuelve opaque response — intentar leer igual
+          return new Response(resp.body, {
+            status: resp.status || 200,
+            headers: {
+              'Content-Type':                'text/html; charset=utf-8',
+              'Access-Control-Allow-Origin': '*',
+            }
+          });
+        }).catch(err => new Response('Error SW: ' + err.message, { status: 500 }))
       );
       return;
     }
