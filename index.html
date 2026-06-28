@@ -1105,7 +1105,7 @@
 
     <div class="menuFullPantalla">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px;border-bottom:1px solid var(--border-menu,#cba6f7);margin-bottom:6px;flex-shrink:0;">
-        <strong style="font-size:13px;color:var(--color-menu-text,#000);">🪷v51❄️</strong>
+        <strong style="font-size:13px;color:var(--color-menu-text,#000);">🪷v52❄️</strong>
         <button type="button" class="bottonV2" onclick="traslape()" title="Cerrar">✖️</button>
       </div>
       <div class="botones">
@@ -1174,8 +1174,12 @@
 
     <!-- MODAL SRC -->
     <div class="modalClaude" id="modalSrc">
-      <div id="configBox">
-        <div id="configHeader">
+      <div class="menuFullPantalla" style="position:relative;max-width:420px;width:92%;border-radius:12px;max-height:80vh;overflow-y:auto;display:flex;flex-direction:column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px;border-bottom:1px solid var(--border-menu,#cba6f7);margin-bottom:6px;flex-shrink:0;">
+          <strong style="font-size:13px;color:var(--color-menu-text,#000);">🌐 Obtener SRC de URL</strong>
+          <button type="button" class="bottonV2" onclick="cerrarSrc()" title="Cerrar">✖️</button>
+        </div>
+        <div style="padding:8px 10px;display:flex;flex-direction:column;gap:12px;">
           <strong>🌐 Obtener SRC de URL</strong>
           <button type="button" class="bottonV2" onclick="cerrarSrc()" title="Cerrar">✖️</button>
         </div>
@@ -1192,11 +1196,11 @@
             </span>
             <span class="toggle-label">Usar Service Worker (sitios que bloquean el Worker)</span>
           </label>
-          <div id="srcEstado" style="font-size:12px;min-height:18px;"></div>
-        </div>
-        <div id="configAcciones">
-          <button onclick="ejecutarFetchSrc()">🌐 Obtener</button>
-          <button onclick="cerrarSrc()">✖️ Cancelar</button>
+          <div id="srcEstado" style="font-size:12px;min-height:18px;color:var(--color-menu-text,#000);"></div>
+          <div style="display:flex;gap:8px;">
+            <button class="bottonV2" style="flex:1" onclick="ejecutarFetchSrc()">🌐 Obtener</button>
+            <button class="bottonV2" style="flex:1" onclick="cerrarSrc()">✖️ Cancelar</button>
+          </div>
         </div>
       </div>
     </div>
