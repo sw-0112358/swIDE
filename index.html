@@ -2536,6 +2536,18 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       /* ── Vista 1: lista de proyectos ── */
+      async function bkCalcularPesoTotal() {
+        const db = await ideAbrirDB();
+        return new Promise((resolve) => {
+          const req = db.transaction('backups', 'readonly').objectStore('backups').getAll();
+          req.onsuccess = e => {
+            const total = e.target.result.reduce((s, r) => s + (r.value?.length || 0), 0);
+            resolve(total);
+          };
+          req.onerror = () => resolve(0);
+        });
+      }
+
       async function bkMostrarProyectos() {
         _bkProyectoActivo = null;
         document.getElementById("bkTitulo").textContent = "🕐 Backups";
@@ -2548,10 +2560,38 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         lista.innerHTML = '<div style="color:#6c7086;font-size:12px;text-align:center;padding:20px;">Cargando…</div>';
         stats.textContent = "";
 
-        const proyectos = await bkLeerProyectos();
-        const nombres   = Object.keys(proyectos);
+        const [proyectos, pesoTotal] = await Promise.all([bkLeerProyectos(), bkCalcularPesoTotal()]);
+        const nombres = Object.keys(proyectos);
+        const totalBackups = Object.values(proyectos).reduce((s, a) => s + a.length, 0);
+        const pesoKB = (pesoTotal / 1024).toFixed(1);
+        const pesoMB = (pesoTotal / 1024 / 1024).toFixed(2);
+        const pesoStr = pesoTotal > 1024 * 1024 ? `${pesoMB} MB` : `${pesoKB} KB`;
 
-        stats.textContent = `${nombres.length} proyecto(s)`;
+        let cuotaStr = "";
+        try {
+          const est   = await navigator.storage.estimate();
+          const usado = est.usage  / 1024 / 1024;
+          const total = est.quota  / 1024 / 1024;
+          const pct   = Math.min(100, (est.usage / est.quota * 100)).toFixed(1);
+          const color = pct > 80 ? '#f38ba8' : pct > 50 ? '#fab387' : '#a6e3a1';
+          cuotaStr = `
+            <span style="color:#45475a;margin:0 4px;">·</span>
+            <span style="color:#6c7086;">Origen: ${usado.toFixed(1)} / ${total.toFixed(0)} MB</span>
+            <span style="display:inline-block;margin-left:6px;background:#313244;
+                          border-radius:4px;width:60px;height:6px;vertical-align:middle;overflow:hidden;">
+              <span style="display:block;height:100%;width:${pct}%;
+                            background:${color};border-radius:4px;"></span>
+            </span>
+            <span style="color:${color};margin-left:4px;">${pct}%</span>`;
+        } catch(e) {}
+
+        stats.innerHTML = `
+          <span style="color:#cdd6f4;">${nombres.length} proyecto(s)</span>
+          <span style="color:#45475a;margin:0 4px;">·</span>
+          <span style="color:#cdd6f4;">${totalBackups} backup(s)</span>
+          <span style="color:#45475a;margin:0 4px;">·</span>
+          <span style="color:#a6e3a1;">💾 ${pesoStr}</span>
+          ${cuotaStr}`;
 
         if (!nombres.length) {
           lista.innerHTML = '<div style="color:#6c7086;font-size:12px;text-align:center;padding:20px;">Sin backups guardados</div>';
