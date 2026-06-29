@@ -1281,18 +1281,24 @@
 
         <div style="display:flex;justify-content:space-between;align-items:center;
                     padding:12px 16px;border-bottom:1px solid #45475a;flex-shrink:0;">
-          <strong style="color:#cdd6f4;font-size:14px;">🕐 Backups locales</strong>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button type="button" id="bkBtnVolver" onclick="bkVolverAProyectos()"
+                    style="display:none;background:#313244;border:1px solid #45475a;color:#cdd6f4;
+                           border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;
+                           font-family:'JetBrains Mono',monospace;">⬅️</button>
+            <strong id="bkTitulo" style="color:#cdd6f4;font-size:14px;">🕐 Backups</strong>
+          </div>
           <div style="display:flex;gap:8px;align-items:center;">
-            <button type="button" onclick="exportarBackupsZip()"
-                    title="Exportar todos como ZIP"
-                    style="background:#313244;border:1px solid #45475a;color:#cdd6f4;
+            <button type="button" id="bkBtnZip" onclick="bkExportarZipProyecto()"
+                    title="Exportar proyecto como ZIP"
+                    style="display:none;background:#313244;border:1px solid #45475a;color:#cdd6f4;
                            border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;
                            font-family:'JetBrains Mono',monospace;">📦 ZIP</button>
-            <button type="button" onclick="limpiarBackupsPanel()"
-                    title="Eliminar todos los backups"
-                    style="background:#313244;border:1px solid #45475a;color:#f38ba8;
+            <button type="button" id="bkBtnLimpiar" onclick="bkLimpiarProyecto()"
+                    title="Eliminar backups de este proyecto"
+                    style="display:none;background:#313244;border:1px solid #45475a;color:#f38ba8;
                            border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;
-                           font-family:'JetBrains Mono',monospace;">🗑️ Limpiar</button>
+                           font-family:'JetBrains Mono',monospace;">🗑️</button>
             <button type="button" onclick="cerrarPanelBackups()"
                     style="background:none;border:none;color:#cdd6f4;font-size:18px;cursor:pointer;">✕</button>
           </div>
@@ -2401,230 +2407,298 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       function setEditorNormal() { editor.setSize("100%", "90%"); }
 
       /* ============================================================
-         BACKUPS
+         BACKUPS — window.storage (DB permanente)
+         Esquema de claves: bk:{proyecto}:{índice}
+         Ej: bk:EditorVisorIDE:0 , bk:swIDE52:3
       ============================================================ */
-      const BackupsKey = '_IDEv2Backups';
 
-      /* ---- Panel Backups: abrir / cerrar ---- */
+      const BK_PREFIX = 'bk:';
+      let _bkProyectoActivo = null; // proyecto abierto en vista backups
+
+      /* ── Detectar nombre de proyecto desde el contenido del editor ── */
+      function bkDetectarProyecto() {
+        const src = editor.getValue();
+        const m   = src.match(/<title[^>]*>([^<]+)<\/title>/i);
+        if (m && m[1].trim()) return m[1].trim();
+        return (document.getElementById("NombreProyecto").value.trim()) || "sin-nombre";
+      }
+
+      /* ── Clave de storage ── */
+      function bkClave(proyecto, idx) { return `${BK_PREFIX}${proyecto}:${idx}`; }
+
+      /* ── IndexedDB para backups ── */
+      let _ideDB = null;
+
+      function ideAbrirDB() {
+        return new Promise((resolve, reject) => {
+          if (_ideDB) { resolve(_ideDB); return; }
+          const req = indexedDB.open('IDEBackups', 1);
+          req.onupgradeneeded = e => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('backups')) {
+              db.createObjectStore('backups', { keyPath: 'key' });
+            }
+          };
+          req.onsuccess = e => { _ideDB = e.target.result; resolve(_ideDB); };
+          req.onerror   = e => reject(e.target.error);
+        });
+      }
+
+      const bkStorage = {
+        async set(key, value) {
+          const db = await ideAbrirDB();
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction('backups', 'readwrite');
+            tx.objectStore('backups').put({ key, value });
+            tx.oncomplete = () => resolve();
+            tx.onerror    = e => reject(e.target.error);
+          });
+        },
+        async get(key) {
+          const db = await ideAbrirDB();
+          return new Promise((resolve, reject) => {
+            const req = db.transaction('backups', 'readonly').objectStore('backups').get(key);
+            req.onsuccess = e => resolve(e.target.result || null);
+            req.onerror   = e => reject(e.target.error);
+          });
+        },
+        async delete(key) {
+          const db = await ideAbrirDB();
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction('backups', 'readwrite');
+            tx.objectStore('backups').delete(key);
+            tx.oncomplete = () => resolve();
+            tx.onerror    = e => reject(e.target.error);
+          });
+        },
+        async list(prefix) {
+          const db = await ideAbrirDB();
+          return new Promise((resolve, reject) => {
+            const req = db.transaction('backups', 'readonly').objectStore('backups').getAllKeys();
+            req.onsuccess = e => {
+              const keys = e.target.result.filter(k => k.startsWith(prefix));
+              resolve({ keys });
+            };
+            req.onerror = e => reject(e.target.error);
+          });
+        }
+      };
+
+      /* ── Leer todos los proyectos (agrupa claves por proyecto) ── */
+      async function bkLeerProyectos() {
+        let result;
+        try { result = await bkStorage.list(BK_PREFIX); } catch(e) { return {}; }
+        const proyectos = {};
+        (result?.keys || []).forEach(k => {
+          const sin = k.slice(BK_PREFIX.length);
+          const sep = sin.lastIndexOf(':');
+          if (sep < 0) return;
+          const proy = sin.slice(0, sep);
+          const idx  = parseInt(sin.slice(sep + 1));
+          if (!proyectos[proy]) proyectos[proy] = [];
+          proyectos[proy].push(idx);
+        });
+        Object.values(proyectos).forEach(arr => arr.sort((a, b) => a - b));
+        return proyectos;
+      }
+
+      /* ── Siguiente índice disponible para un proyecto ── */
+      async function bkSiguienteIdx(proyecto) {
+        const proyectos = await bkLeerProyectos();
+        const idxs = proyectos[proyecto] || [];
+        return idxs.length ? idxs[idxs.length - 1] + 1 : 0;
+      }
+
+      /* ── Guardar backup ── */
+      async function guardarBackup(contenido) {
+        const proyecto  = bkDetectarProyecto();
+        const idx       = await bkSiguienteIdx(proyecto);
+        const pesoBytes = new Blob([contenido]).size;
+        const pesoKB    = (pesoBytes / 1024).toFixed(2);
+        const data      = { contenido, fecha: new Date().toLocaleString(), peso: `${pesoBytes} B / ${pesoKB} KB` };
+        try {
+          await bkStorage.set(bkClave(proyecto, idx), JSON.stringify(data));
+          mostrarEstado(`💾 Backup #${idx} → ${proyecto}`);
+        } catch(e) {
+          mostrarEstado("❌ Error al guardar backup: " + e.message);
+        }
+      }
+
+      /* ── Abrir / cerrar panel ── */
       function abrirPanelBackups() {
-        renderPanelBackups();
+        _bkProyectoActivo = null;
         document.getElementById("modalBackups").classList.add("visible");
+        bkMostrarProyectos();
       }
 
       function cerrarPanelBackups() {
         document.getElementById("modalBackups").classList.remove("visible");
       }
 
-      function limpiarBackupsPanel() {
-        if (!confirm("¿Eliminar TODOS los backups del LocalStorage?")) return;
-        limpiarBackups();
-        renderPanelBackups();
-      }
+      /* ── Vista 1: lista de proyectos ── */
+      async function bkMostrarProyectos() {
+        _bkProyectoActivo = null;
+        document.getElementById("bkTitulo").textContent = "🕐 Backups";
+        document.getElementById("bkBtnVolver").style.display  = "none";
+        document.getElementById("bkBtnZip").style.display     = "none";
+        document.getElementById("bkBtnLimpiar").style.display = "none";
 
-      function renderPanelBackups() {
-        const lista  = document.getElementById("backupsLista");
-        const stats  = document.getElementById("backupsStats");
+        const lista = document.getElementById("backupsLista");
+        const stats = document.getElementById("backupsStats");
+        lista.innerHTML = '<div style="color:#6c7086;font-size:12px;text-align:center;padding:20px;">Cargando…</div>';
+        stats.textContent = "";
 
-        // Recopilar claves ordenadas
-        const claves = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.endsWith(BackupsKey)) claves.push(key);
-        }
-        claves.sort((a, b) => parseInt(a) - parseInt(b));
+        const proyectos = await bkLeerProyectos();
+        const nombres   = Object.keys(proyectos);
 
-        // Stats
-        let totalBytes = 0;
-        claves.forEach(k => {
-          try { totalBytes += (localStorage.getItem(k) || "").length * 2; } catch(e){}
-        });
-        const kb = (totalBytes / 1024).toFixed(1);
-        const lsMax = 5 * 1024 * 1024; // ~5 MB típico
-        const pct = Math.min(100, (totalBytes / lsMax * 100)).toFixed(0);
-        stats.innerHTML = `${claves.length} backup(s) · ${kb} KB usados
-          <span style="display:inline-block;margin-left:8px;background:#313244;
-                        border-radius:4px;width:80px;height:7px;vertical-align:middle;overflow:hidden;">
-            <span style="display:block;height:100%;width:${pct}%;
-                          background:${pct>80?'#f38ba8':'#a6e3a1'};border-radius:4px;"></span>
-          </span> ${pct}%`;
+        stats.textContent = `${nombres.length} proyecto(s)`;
 
-        if (!claves.length) {
+        if (!nombres.length) {
           lista.innerHTML = '<div style="color:#6c7086;font-size:12px;text-align:center;padding:20px;">Sin backups guardados</div>';
           return;
         }
 
         lista.innerHTML = "";
-        claves.forEach((key, idx) => {
-          let data;
-          try { data = JSON.parse(localStorage.getItem(key)); } catch(e) { return; }
-          const esUltimo = idx === claves.length - 1;
-          const limpio   = key.replace(BackupsKey, "");
+        nombres.sort().forEach(proy => {
+          const idxs = proyectos[proy];
+          const div  = document.createElement("div");
+          div.className = "github-item";
+          div.innerHTML = `
+            <span class="icono">📁</span>
+            <span class="nombre">${proy}</span>
+            <span class="meta">${idxs.length} backup${idxs.length !== 1 ? 's' : ''}</span>`;
+          div.addEventListener("click", () => bkMostrarBackups(proy));
+          lista.appendChild(div);
+        });
+      }
 
+      /* ── Vista 2: backups de un proyecto ── */
+      async function bkMostrarBackups(proyecto) {
+        _bkProyectoActivo = proyecto;
+        document.getElementById("bkTitulo").textContent = `📁 ${proyecto}`;
+        document.getElementById("bkBtnVolver").style.display  = "inline-block";
+        document.getElementById("bkBtnZip").style.display     = "inline-block";
+        document.getElementById("bkBtnLimpiar").style.display = "inline-block";
+
+        const lista = document.getElementById("backupsLista");
+        const stats = document.getElementById("backupsStats");
+        lista.innerHTML = '<div style="color:#6c7086;font-size:12px;text-align:center;padding:20px;">Cargando…</div>';
+
+        const proyectos = await bkLeerProyectos();
+        const idxs      = proyectos[proyecto] || [];
+
+        stats.textContent = `${idxs.length} backup(s) en "${proyecto}"`;
+
+        if (!idxs.length) {
+          lista.innerHTML = '<div style="color:#6c7086;font-size:12px;text-align:center;padding:20px;">Sin backups</div>';
+          return;
+        }
+
+        // Leer todos los metadatos en paralelo
+        const entradas = await Promise.all(idxs.map(async idx => {
+          const key = bkClave(proyecto, idx);
+          try {
+            const r    = await bkStorage.get(key);
+            const data = JSON.parse(r.value);
+            return { idx, key, fecha: data.fecha, peso: data.peso, contenido: data.contenido };
+          } catch(e) { return { idx, key, fecha: "—", peso: "—", contenido: null }; }
+        }));
+
+        lista.innerHTML = "";
+        entradas.reverse(); // más reciente primero
+        entradas.forEach((e, pos) => {
+          const esUltimo = pos === 0;
           const div = document.createElement("div");
           div.className = "backup-item";
           div.innerHTML = `
-            <span class="bi-num">${idx}</span>
+            <span class="bi-num">#${e.idx}</span>
             <div class="bi-info">
-              <div class="bi-nombre">${limpio.replace(/^\d+:\s*/, "")}${esUltimo ? '<span class="bi-badge">● ÚLTIMO</span>' : ''}</div>
-              <div class="bi-meta">${data.fecha || "—"} · ${data.peso || "—"}</div>
+              <div class="bi-nombre">${proyecto}${esUltimo ? '<span class="bi-badge">● ÚLTIMO</span>' : ''}</div>
+              <div class="bi-meta">${e.fecha} · ${e.peso}</div>
             </div>
             <div class="bi-acciones">
               <button class="bi-btn" title="Ver diff">👁️</button>
               <button class="bi-btn danger" title="Eliminar">🗑️</button>
             </div>`;
           const btns = div.querySelectorAll(".bi-btn");
-          btns[0].addEventListener("click", () => panelVerDiff(limpio));
-          btns[1].addEventListener("click", () => panelEliminarBackup(key, btns[1]));
+          btns[0].addEventListener("click", () => bkVerDiff(e.contenido, proyecto, e.idx));
+          btns[1].addEventListener("click", () => bkEliminar(e.key, div));
           lista.appendChild(div);
         });
       }
 
-      function panelVerDiff(nombreLimpio) {
-        const key = nombreLimpio + BackupsKey;
-        let data;
-        try { data = JSON.parse(localStorage.getItem(key)); } catch(e) {
-          mostrarEstado("❌ Error al leer backup"); return;
-        }
-        if (!data || !data.contenido) { mostrarEstado("⚠️ Backup vacío"); return; }
+      function bkVolverAProyectos() { bkMostrarProyectos(); }
 
-        _backupParaDiff = data.contenido;
-        // Extraer nombre del proyecto desde la key
-        _backupNombreLimpio = nombreLimpio;
-
-        renderDiff(editor.getValue(), data.contenido);
+      /* ── Ver diff de un backup ── */
+      function bkVerDiff(contenido, proyecto, idx) {
+        if (!contenido) { mostrarEstado("⚠️ Backup vacío"); return; }
+        _backupParaDiff     = contenido;
+        _backupNombreLimpio = proyecto;
+        renderDiff(editor.getValue(), contenido);
         document.getElementById("modalDiff").classList.add("visible");
         cerrarPanelBackups();
       }
 
-      function panelEliminarBackup(key, btn) {
+      /* ── Eliminar un backup individual ── */
+      async function bkEliminar(key, div) {
         if (!confirm("¿Eliminar este backup?")) return;
-        localStorage.removeItem(key);
-        // quitar la fila visualmente
-        btn.closest(".backup-item").remove();
-        // recalcular stats y contador
-        iBackupGuardados = Math.max(0, iBackupGuardados - 1);
-        renderPanelBackups(); // re-render completo para recalcular stats
+        try {
+          await bkStorage.delete(key);
+          div.remove();
+          // Si no quedan backups en el proyecto, volver
+          const proyectos = await bkLeerProyectos();
+          if (!_bkProyectoActivo || !(proyectos[_bkProyectoActivo]?.length)) {
+            bkMostrarProyectos();
+          } else {
+            document.getElementById("backupsStats").textContent =
+              `${proyectos[_bkProyectoActivo].length} backup(s) en "${_bkProyectoActivo}"`;
+          }
+        } catch(e) { mostrarEstado("❌ Error al eliminar: " + e.message); }
       }
 
-      function reiniciarSelector() { /* ya no usa el select — vacío intencionalmente */ }
-
-      function limpiarBackups() {
-        let borrados = 0;
-        for (let i = localStorage.length - 1; i >= 0; i--) {
-          const key = localStorage.key(i);
-          if (key && key.endsWith(BackupsKey)) { localStorage.removeItem(key); borrados++; }
-        }
-        mostrarEstado("🗑️ Keys(" + borrados + ")");
-        iBackupGuardados = 0;
-        reiniciarSelector();
-        setListBackup();
-      }
-
-      let iBackupGuardados = 0;
-
-      /* ---- exportar todos los backups como ZIP ---- */
-      async function exportarBackupsZip(automode = false) {
-        const claves = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.endsWith(BackupsKey)) claves.push(key);
-        }
-        if (claves.length === 0) { if (!automode) mostrarEstado("⚠️ No hay backups guardados"); return; }
+      /* ── ZIP del proyecto activo ── */
+      async function bkExportarZipProyecto() {
+        if (!_bkProyectoActivo) return;
+        const proyectos = await bkLeerProyectos();
+        const idxs      = proyectos[_bkProyectoActivo] || [];
+        if (!idxs.length) { mostrarEstado("⚠️ Sin backups"); return; }
 
         const zip = new JSZip();
-        claves.sort((a, b) => parseInt(a) - parseInt(b));
-        claves.forEach(key => {
+        await Promise.all(idxs.map(async idx => {
           try {
-            const data   = JSON.parse(localStorage.getItem(key));
-            const limpio = key.replace(BackupsKey, "").replace(/[^\w\-\[\]. ]/g, "_");
-            const nombre = `${limpio} (${(data.fecha||"").replace(/[/:]/g,"-")}).html`;
-            zip.file(nombre, data.contenido || "");
-          } catch(e) { /* ignorar corruptos */ }
-        });
+            const r    = await bkStorage.get(bkClave(_bkProyectoActivo, idx));
+            const data = JSON.parse(r.value);
+            const ts   = (data.fecha || "").replace(/[/:]/g, "-");
+            zip.file(`${_bkProyectoActivo}_${idx} (${ts}).html`, data.contenido || "");
+          } catch(e) {}
+        }));
 
         const blob = await zip.generateAsync({ type: "blob" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        const ts = new Date().toISOString().slice(0,19).replace(/[T:]/g,"-");
-        a.download = `IDE_Backups_${ts}.zip`;
+        const a    = document.createElement("a");
+        a.href     = URL.createObjectURL(blob);
+        a.download = `Backups_${_bkProyectoActivo}_${new Date().toISOString().slice(0,10)}.zip`;
         a.click();
         URL.revokeObjectURL(a.href);
-
-        if (automode) {
-          // Limpiar localStorage después del ZIP automático
-          limpiarBackups();
-          mostrarEstado("📦 LocalStorage lleno → ZIP descargado y limpiado");
-        } else {
-          mostrarEstado(`📦 ZIP con ${claves.length} backup(s) descargado`);
-        }
+        mostrarEstado(`📦 ZIP de ${_bkProyectoActivo} descargado`);
       }
 
-      function guardarBackup(contenido) {
-        const nombre     = nombreDelHtml();
-        const key        = iBackupGuardados + ": [" + nombre + "]" + BackupsKey;
-        const pesoBytes  = new Blob([contenido]).size;
-        const pesoKB     = (pesoBytes / 1024).toFixed(2);
-        const data       = { contenido, fecha: new Date().toLocaleString(), peso: `${pesoBytes} B / ${pesoKB} KB` };
-
-        try {
-          localStorage.setItem(key, JSON.stringify(data));
-        } catch(e) {
-          // LocalStorage lleno → exportar ZIP automáticamente y luego reintentar
-          mostrarEstado("⚠️ LocalStorage lleno — generando ZIP…");
-          exportarBackupsZip(true).then(() => {
-            // Reintentar guardar tras limpiar
-            try {
-              iBackupGuardados = 0;
-              const key2 = "0: [" + nombre + "]" + BackupsKey;
-              localStorage.setItem(key2, JSON.stringify(data));
-              iBackupGuardados = 1;
-              agregarOpcionSelector(key2, data);
-            } catch(e2) {
-              mostrarEstado("❌ No se pudo guardar ni tras limpiar");
-            }
-          });
-          return;
-        }
-
-        iBackupGuardados++;
-        agregarOpcionSelector(key, data);
+      /* ── Limpiar todos los backups del proyecto activo ── */
+      async function bkLimpiarProyecto() {
+        if (!_bkProyectoActivo) return;
+        if (!confirm(`¿Eliminar TODOS los backups de "${_bkProyectoActivo}"?`)) return;
+        const proyectos = await bkLeerProyectos();
+        const idxs      = proyectos[_bkProyectoActivo] || [];
+        await Promise.all(idxs.map(idx => bkStorage.delete(bkClave(_bkProyectoActivo, idx)).catch(() => {})));
+        mostrarEstado(`🗑️ Backups de "${_bkProyectoActivo}" eliminados`);
+        bkMostrarProyectos();
       }
 
-      function agregarOpcionSelector(key, data) {
-        const selector = document.getElementById("backupSelector");
-        const opt      = document.createElement("option");
-        const limpio   = key.replace(BackupsKey, "");
-        opt.value      = limpio;
-        opt.textContent = `${limpio} - ${data.fecha} - ${data.peso}`;
-        selector.appendChild(opt);
-      }
-
-      function setListBackup() {
-        const selector = document.getElementById("backupSelector");
-        selector.innerHTML = '<option value="">Ninguno</option>';
-
-        const claves = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.endsWith(BackupsKey)) claves.push(key);
-        }
-        claves.sort((a, b) => parseInt(a) - parseInt(b));
-
-        if (claves.length > 0) {
-          iBackupGuardados = parseInt(claves[claves.length - 1]) + 1;
-        } else {
-          iBackupGuardados = 0;
-        }
-
-        claves.forEach(key => {
-          try {
-            const data = JSON.parse(localStorage.getItem(key));
-            agregarOpcionSelector(key, data);
-          } catch(e) {
-            console.warn("Backup corrupto ignorado:", key);
-          }
-        });
-      }
+      /* ── Stubs de compatibilidad (el autoguardado sigue llamando guardarBackup) ── */
+      function limpiarBackups()  { /* reemplazado por bkLimpiarProyecto */ }
+      function setListBackup()   { /* ya no necesario — DB permanente */   }
+      function reiniciarSelector() { /* sin selector */                    }
+      function agregarOpcionSelector() { /* sin selector */                }
+      let iBackupGuardados = 0; // mantenido por compatibilidad, ya no controla índices
 
       /* ============================================================
          DIFF VISUAL
@@ -2659,9 +2733,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         if (!_backupParaDiff) return;
         editor.setValue(_backupParaDiff);
 
-        const matchNombre = (_backupNombreLimpio || "").match(/\[(.+?)\]/);
-        if (matchNombre) {
-          document.getElementById("NombreProyecto").value = matchNombre[1].replace(/\.[^/.]+$/, "");
+        if (_backupNombreLimpio) {
+          document.getElementById("NombreProyecto").value = _backupNombreLimpio;
         }
 
         cerrarDiff();
@@ -4198,7 +4271,6 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         renderSelectorAgentes();
         await cargarConfig();
         setEditorNormal();
-        setListBackup();
         editor.setValue(htmlPorDefecto());
 
         try {
