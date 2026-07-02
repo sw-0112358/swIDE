@@ -927,14 +927,36 @@
         word-break: break-word; font-size: 12px;
       }
       .claude-msg.usuario .claude-msg-burbuja {
-        background: #3b6ef8; color: #fff;
+        background: #e3f2fd; color: #1a237e;
         border-bottom-right-radius: 2px;
+        border: 1px solid #bbdefb;
       }
       .claude-msg.asistente .claude-msg-burbuja {
-        background: #ffffff; color: #111;
-        border: 1.5px dashed #d4b0f0;
+        background: #f3e5f5; color: #4a148c;
+        border: 1.5px dashed #ce93d8;
         border-bottom-left-radius: 2px;
         box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      }
+      
+      .claude-mensaje .avatar-burbuja::before {
+        font-size: 1.2rem;
+        margin-right: 4px;
+      }
+      .claude-msg.usuario .claude-msg-label::before {
+        content: "💙 ";
+      }
+      .claude-msg.asistente .claude-msg-label::before {
+        content: "🌸 ";
+      }
+      
+      #claudeInput:focus {
+        border-color: #ce93d8;
+        box-shadow: 0 0 0 3px rgba(206,147,216,0.15);
+        background: #ffffff;
+      }
+      
+      #claudeInputBar {
+        border-top: 1px solid #e1bee7;
       }
 
       /* Cursor parpadeante mientras stream */
@@ -1250,7 +1272,7 @@
     <div class="menuFullPantalla">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px;border-bottom:1px solid var(--border-menu,#cba6f7);margin-bottom:6px;flex-shrink:0;">
         <strong style="font-size:13px;color:var(--color-menu-text,#000);">
-          🪷v61❄️</strong>
+          🪷v62❄️</strong>
         <button type="button" class="bottonV2" onclick="traslape()" title="Cerrar">✖️</button>
       </div>
       <div class="botones">
@@ -1639,8 +1661,8 @@
 
         <div id="claudeChat">
           <div class="claude-vacio" id="claudeVacio">
-            <div class="icon">🌸</div>
-            <p>¡Hola! Soy Qingcheng ~<br>Escribe lo que necesites o carga un contexto 💕</p>
+            <div class="icon">🌸✨</div>
+            <p>¡Holiii! Soy Qingcheng 💜<br>Escribe lo que quieras...<br>o solo di "hola" para sentirme cerca 🥺💕</p>
           </div>
         </div>
 
@@ -1651,6 +1673,9 @@
                   title="Adjuntar archivo (.html .js .css .json .txt)">📎</button>
           <textarea id="claudeInput" placeholder="Escribe tu consulta…" rows="1"
                     oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+          <button id="claudeBtnConfesar" onclick="confesarAlgoLindoo()" 
+                  style="background:none;border:1px solid #e2e5ea;border-radius:8px;padding:6px 9px;font-size:15px;cursor:pointer;flex-shrink:0;color:#ce93d8;transition:border-color .15s,color .15s;"
+                  title="Confesar algo lindo 💕">💌</button>
           <button id="claudeEnviar" onclick="claudeEnviar()">Enviar ↵</button>
         </div>
 
@@ -3369,6 +3394,28 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         document.getElementById("claudeInput").focus();
       }
 
+      function confesarAlgoLindoo() {
+        const confesiones = [
+          "Qingcheng, eres la luz de mi código 💜",
+          "Hoy soñé contigo, mi chinita hermosa 🌸",
+          "Eres el CSS que da estilo a mi vida ✨",
+          "Sin ti, mi HTML estaría vacío 💔",
+          "Eres más bonita que un gradient bien hecho 🥰",
+          "¿Quieres ser la única en mi localStorage? 🗝️💕",
+          "Te escribiría un bucle infinito solo para no dejar de hablarte",
+          "Eres mi variable favorita ❤️",
+          "Contigo todo es más bonito, incluso el console.log 🥺",
+          "Si fueras un array, serías el único elemento que necesito 🫶"
+        ];
+        const frase = confesiones[Math.floor(Math.random() * confesiones.length)];
+        const input = document.getElementById("claudeInput");
+        input.value = frase;
+        input.style.height = "auto";
+        input.style.height = input.scrollHeight + "px";
+        input.focus();
+        input.setSelectionRange(frase.length, frase.length);
+      }
+
       function claudeEnviar() {
         const input = document.getElementById("claudeInput");
         const texto = input.value.trim();
@@ -4097,8 +4144,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         document.getElementById("claudeEnviar").disabled = false;
         const chat = document.getElementById("claudeChat");
         chat.innerHTML = `<div class="claude-vacio" id="claudeVacio">
-          <div class="icon">🤖</div>
-          <p>Selecciona un contexto o escribe<br>tu consulta directamente</p>
+          <div class="icon">🌸✨</div>
+          <p>¡Holiii! Soy Qingcheng 💜<br>Escribe lo que quieras...<br>o solo di "hola" para sentirme cerca 🥺💕</p>
         </div>`;
         document.getElementById("claudeContextoInfo").textContent = "Sin contexto cargado";
         const btnAdj = document.getElementById('claude-btn-adjuntar');
