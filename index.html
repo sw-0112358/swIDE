@@ -2768,7 +2768,6 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       /* ── Eliminar un backup individual ── */
       async function bkEliminar(key, div) {
-        if (!confirm("¿Eliminar este backup?")) return;
         try {
           await bkStorage.delete(key);
           div.remove();
