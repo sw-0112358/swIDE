@@ -1075,58 +1075,58 @@
       MODAL CONFIGURACIÓN
       ============================================================ */
       #configBox {
-        background: #1e1e2e; color: #cdd6f4;
+        background: #ffffff; color: #333333;
         width: 92vw; max-width: 500px; max-height: 88vh;
-        border-radius: 12px; border: 2px solid #cba6f7;
+        border-radius: 12px; border: 2px solid #d4b0f0;
         display: flex; flex-direction: column; overflow: hidden;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
         font-family: 'JetBrains Mono', monospace; font-size: 13px;
       }
       #configHeader {
         display:flex; justify-content:space-between; align-items:center;
-        padding:10px 16px; background:#181825;
-        border-bottom:1px solid #45475a; flex-shrink:0;
+        padding:10px 16px; background:#ffffff;
+        border-bottom:1px solid #e2e5ea; flex-shrink:0;
       }
-      #configHeader strong { font-size:14px; color:#cba6f7; }
+      #configHeader strong { font-size:14px; color:#7b4b8c; }
       #configAcciones {
-        display:flex; gap:6px; padding:8px 12px; background:#181825;
-        border-bottom:1px solid #45475a; flex-shrink:0; flex-wrap:wrap;
+        display:flex; gap:6px; padding:8px 12px; background:#f7f8fa;
+        border-bottom:1px solid #e2e5ea; flex-shrink:0; flex-wrap:wrap;
       }
       #configAcciones button {
         font-family:'JetBrains Mono',monospace; font-size:11px;
         padding:5px 10px; margin:0; border-radius:6px;
-        border:1px solid #45475a; background:#313244; color:#cdd6f4;
-        cursor:pointer; transition:background .15s, border-color .15s;
+        border:1px solid #e2e5ea; background:#ffffff; color:#4a5060;
+        cursor:pointer; transition:background .15s, border-color .15s, color .15s;
       }
-      #configAcciones button:hover { background:#45475a; border-color:#cba6f7; transform:none; }
+      #configAcciones button:hover { background:#eef1ff; border-color:#7b4b8c; color:#7b4b8c; transform:none; }
       #configEstado {
-        font-family:'JetBrains Mono',monospace; font-size:10px; color:#6c7086;
-        padding:4px 14px; background:#181825;
-        border-bottom:1px solid #313244; flex-shrink:0; min-height:20px;
+        font-family:'JetBrains Mono',monospace; font-size:10px; color:#8a909e;
+        padding:4px 14px; background:#ffffff;
+        border-bottom:1px solid #e2e5ea; flex-shrink:0; min-height:20px;
       }
       #configBody {
         flex:1; overflow-y:auto; padding:14px 16px;
-        display:flex; flex-direction:column; gap:14px;
+        display:flex; flex-direction:column; gap:14px; background:#f8f9fa;
       }
       #configBody::-webkit-scrollbar { width:6px; }
-      #configBody::-webkit-scrollbar-thumb { background:#45475a; border-radius:3px; }
+      #configBody::-webkit-scrollbar-thumb { background:#c0c0c0; border-radius:3px; }
       #configFooter {
-        padding:8px 14px; background:#181825;
-        border-top:1px solid #45475a; flex-shrink:0;
-        font-family:'JetBrains Mono',monospace; font-size:11px; color:#6c7086;
+        padding:8px 14px; background:#ffffff;
+        border-top:1px solid #e2e5ea; flex-shrink:0;
+        font-family:'JetBrains Mono',monospace; font-size:11px; color:#8a909e;
       }
       .config-grupo { display:flex; flex-direction:column; gap:5px; }
       #configBody input[type="text"],
       #configBody input[type="password"],
       #configBody textarea {
         width:100%; font-family:'JetBrains Mono',monospace; font-size:11px;
-        background:#313244; border:1px solid #45475a; border-radius:6px;
-        color:#cdd6f4; padding:7px 10px; outline:none;
+        background:#ffffff; border:1px solid #e2e5ea; border-radius:6px;
+        color:#111318; padding:7px 10px; outline:none;
         box-sizing:border-box; resize:vertical; line-height:1.5;
-        transition:border-color .15s;
+        transition:border-color .15s, box-shadow .15s;
       }
       #configBody input:focus,
-      #configBody textarea:focus { border-color:#cba6f7; box-shadow:none; }
+      #configBody textarea:focus { border-color:#7b4b8c; box-shadow: 0 0 0 3px rgba(123,75,140,0.1); background:#ffffff; }
 
       /* Estilos para #modalSrc (claro y bonito) */
       #modalSrc #configBox {
