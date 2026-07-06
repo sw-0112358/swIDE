@@ -733,7 +733,7 @@
       .modalClaude {
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.65);
+        background: rgba(0,0,0,0.25);
         z-index: 99998;
         display: none;
         align-items: center;
@@ -815,19 +815,24 @@
       .github-item .meta { flex-shrink: 0; color: #8a909e; font-size: 10px; }
 
       #claudeBox {
-        background: #ffffff; /* Fondo blanco */
-        color: #333333; /* Color de texto oscuro para contrastar */
+        color: #333333;
         width: 92vw;
         max-width: 780px;
         height: 82vh;
-        border-radius: 12px;
-        border: 2px solid #d4b0f0;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.7);
         font-family: 'JetBrains Mono', monospace;
         font-size: 13px;
+        padding: 0;
+      }
+
+      /* Posición centrada para el panel del chat */
+      #modalClaude1 .classPaneles {
+        top: 50%;
+        left: 50%;
+        right: auto;
+        transform: translate(-50%, -50%);
       }
 
       #claudeHeader {
@@ -1631,9 +1636,9 @@
 
 
     <!-- MODAL CLAUDE IA -->
-    <div class="modalClaude" id="modalClaude1">
+    <div id="modalClaude1" style="position:fixed;inset:0;z-index:99998;display:none;align-items:center;justify-content:center;">
 
-      <div id="claudeBox">
+      <div id="claudeBox" class="classPaneles">
 
         <div id="claudeHeader">
           <strong>🌸 Qingcheng ~ tu asistente fiel</strong>
@@ -3244,12 +3249,12 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           document.getElementById("claudeContextoInfo").textContent = "Sin contexto cargado";
         }
 
-        document.getElementById("modalClaude1").classList.add("visible");
+        document.getElementById("modalClaude1").style.display = "flex";
         setTimeout(() => document.getElementById("claudeInput").focus(), 100);
       }
 
       function cerrarClaude() {
-        document.getElementById("modalClaude1").classList.remove("visible");
+        document.getElementById("modalClaude1").style.display = "none";
       }
 
       // ── Gestión de agentes — rellena el selector dinámicamente ──
