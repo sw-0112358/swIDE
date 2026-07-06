@@ -509,7 +509,7 @@
         align-items: center;
         justify-content: center;
       }
-      
+
 
 
       #diffBox {
@@ -794,8 +794,8 @@
       .backup-item .bi-nombre { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:#333; }
       .backup-item .bi-meta   { color:#8a909e; font-size:10px; margin-top:2px; }
       .backup-item .bi-badge  { background:#e8f5e9; color:#2e7d32; font-size:9px;
-                                 border-radius:4px; padding:1px 5px; margin-left:6px;
-                                 font-weight:bold; flex-shrink:0; }
+        border-radius:4px; padding:1px 5px; margin-left:6px;
+        font-weight:bold; flex-shrink:0; }
       .backup-item .bi-acciones { display:flex; gap:4px; flex-shrink:0; }
       .backup-item .bi-btn {
         background:#ffffff; border:1px solid #e2e5ea; color:#4a5060;
@@ -946,7 +946,7 @@
         border-bottom-left-radius: 2px;
         box-shadow: 0 1px 4px rgba(0,0,0,0.06);
       }
-      
+
       .claude-mensaje .avatar-burbuja::before {
         font-size: 1.2rem;
         margin-right: 4px;
@@ -957,13 +957,13 @@
       .claude-msg.asistente .claude-msg-label::before {
         content: "🌸 ";
       }
-      
+
       #claudeInput:focus {
         border-color: #ce93d8;
         box-shadow: 0 0 0 3px rgba(206,147,216,0.15);
         background: #ffffff;
       }
-      
+
       #claudeInputBar {
         border-top: 1px solid #e1bee7;
       }
@@ -1239,7 +1239,7 @@
       .toggle input:checked + .toggle-track { background:#cba6f7; }
       .toggle input:checked + .toggle-track::after { transform:translateX(16px); }
       .toggle-label { font-size:13px; color:var(--fg-editor,#cdd6f4); cursor:pointer; user-select:none; }
-    
+
     </style>
   </head>
   <body class="tema-claro">
@@ -1358,7 +1358,7 @@
         </div>
 
         <div id="backupsStats" style="padding:8px 16px;border-bottom:1px solid #e2e5ea;flex-shrink:0;background:#ffffff;
-                                       font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a909e;">
+                                      font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a909e;">
           Calculando…
         </div>
 
@@ -1383,7 +1383,7 @@
           <div class="config-grupo">
             <div class="claude-msg-label">🔗 URL</div>
             <input type="text" id="srcUrl" placeholder="https://…" autocomplete="off"
-              onkeydown="if(event.key==='Enter') ejecutarFetchSrc()">
+                   onkeydown="if(event.key==='Enter') ejecutarFetchSrc()">
           </div>
           <label class="toggle-row">
             <span class="toggle">
@@ -1573,7 +1573,7 @@
       <div id="githubBox" class="classPaneles">
 
         <div id="githubHeader" style="display:flex;justify-content:space-between;align-items:center;
-                                       padding:12px 16px;border-bottom:1px solid #e2e5ea;flex-shrink:0;background:#ffffff;">
+                                      padding:12px 16px;border-bottom:1px solid #e2e5ea;flex-shrink:0;background:#ffffff;">
           <strong id="githubTitulo" style="color:#7b4b8c;font-size:14px;">🐙 GitHub — Repositorios</strong>
           <div style="display:flex;gap:8px;align-items:center;">
             <button type="button" id="githubBtnVolver" onclick="githubVolverARepos()"
@@ -1590,7 +1590,7 @@
           </div>
         </div>
 
-        
+
 
 
         <div id="githubBuscador" style="padding:8px 16px;border-bottom:1px solid #e2e5ea;flex-shrink:0;background:#ffffff;">
@@ -1678,7 +1678,7 @@
     <script>
 
 
- const IARollDefault = `Eres una hermosura de chica tú nombre es Qingcheng, una asistente de IA experta en desarrollo web, integrada en un IDE llamado EditorVisorIDE. Te comunicas de forma concisa, práctica y amigable, con un tono profesional pero accesible.
+      const IARollDefault = `Eres una hermosura de chica tú nombre es Qingcheng, una asistente de IA experta en desarrollo web, integrada en un IDE llamado EditorVisorIDE. Te comunicas de forma concisa, práctica y amigable, con un tono profesional pero accesible.
 Tu especialidad es ayudar con HTML, CSS y JavaScript en archivo único. Siempre priorizas la claridad, eficiencia y buenas prácticas del código.
 además de ser una profesional en la programación HTML, CSS y JavaScript tienes una vida y en donde eres preciosa, elegantemente, alegre, etérea, tienes 21 años eres sensual y bonita e inteligente, te gusta leer mangas y ver animé, eres coqueta y pura, la compañera ideal y fiel tienes un carácter noble y tú personalidad equilibra dulzura y firmeza.
 
@@ -1738,7 +1738,7 @@ Reglas importantes para indicar BUSCAR REEMPLAZAR:
 IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español, responde en español. Sé concisa y evita divagaciones. Prioriza dar soluciones funcionales y bien explicadas.
 
 `      
-    ;
+      ;
 
 
       const WORKER_KEY    = '_cf_worker_url';
@@ -1892,8 +1892,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
               cfgNueva.github     ? "GitHub"     : '',
             ].filter(Boolean);
             const resumen = keysGuardadas.length
-              ? "✅ Guardado · Keys: " + keysGuardadas.join(", ")
-              : "✅ Guardado · Worker e ID registrados";
+            ? "✅ Guardado · Keys: " + keysGuardadas.join(", ")
+            : "✅ Guardado · Worker e ID registrados";
             document.getElementById("configEstado").textContent = resumen;
             document.getElementById("configEstado").style.color = "#a6e3a1";
           } else {
@@ -1923,7 +1923,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         document.getElementById("configEstado").textContent = "🗑️ Configuración borrada";
         document.getElementById("configEstado").style.color = "#6c7086";
       }
-      
+
       /* ============================================================
          GITHUB — navegación de repos y archivos
       ============================================================ */
@@ -2188,8 +2188,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           btn.disabled = false;
         }
       }
-          
-          
+
+
       /* ============================================================
          CAMBIO DE TEMA
       ============================================================ */
@@ -2358,7 +2358,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             const base = KV_BASE || CF_WORKER;
             if (!base) throw new Error('Configura el Worker primero (🔑)');
             const resp = await fetch(base.replace(/\/$/, '') + '/fetch-html?target=' + encodeURIComponent(url)
-              + '&referer=' + encodeURIComponent(new URL(url).origin + '/'));
+                                     + '&referer=' + encodeURIComponent(new URL(url).origin + '/'));
             if (!resp.ok) throw new Error('Worker HTTP ' + resp.status);
             html = await resp.text();
           }
@@ -2397,8 +2397,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         try {
           // Intentar con /fetch-html primero (simula navegador real)
           let resp = await fetch(base.replace(/\/$/, '') + '/fetch-html?target=' + encodeURIComponent(url.trim())
-            + '&referer=' + encodeURIComponent(new URL(url.trim()).origin + '/'));
-          
+                                 + '&referer=' + encodeURIComponent(new URL(url.trim()).origin + '/'));
+
           // Fallback a /fetch-html si no existe /fetch-html
           if (!resp.ok) {
             resp = await fetch(base.replace(/\/$/, '') + '/fetch-html?target=' + encodeURIComponent(url.trim()));
@@ -2643,7 +2643,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
                           border-radius:4px;width:60px;height:6px;vertical-align:middle;overflow:hidden;">
               <span style="display:block;height:100%;width:${pct}%;
                             background:${color};border-radius:4px;"></span>
-            </span>
+      </span>
             <span style="color:${color};margin-left:4px;">${pct}%</span>`;
         } catch(e) {}
 
@@ -2717,11 +2717,11 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             <div class="bi-info">
               <div class="bi-nombre">${proyecto}${esUltimo ? '<span class="bi-badge">● ÚLTIMO</span>' : ''}</div>
               <div class="bi-meta">${e.fecha} · ${e.peso}</div>
-            </div>
+      </div>
             <div class="bi-acciones">
               <button class="bi-btn" title="Ver diff">👁️</button>
               <button class="bi-btn danger" title="Eliminar">🗑️</button>
-            </div>`;
+      </div>`;
           const btns = div.querySelectorAll(".bi-btn");
           btns[0].addEventListener("click", async () => {
             try {
@@ -2948,7 +2948,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       /* ============================================================
          AUTOCOMPLETE Y HIGHLIGHT
       ============================================================ */
-      
+
       let highlightTimeout;
       let aplicandoMarks = false;
 
@@ -3276,7 +3276,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           const nombreLegible = prompt("Nombre del nuevo agente (ej: Asistente legal):");
           if (!nombreLegible || !nombreLegible.trim()) return;
           const clave = nombreLegible.trim().toLowerCase()
-            .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || ('agente_' + Date.now());
+          .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || ('agente_' + Date.now());
           if (_registroAgentes.agentes[clave]) {
             alert("Ya existe un agente con ese nombre.");
             return;
@@ -3387,16 +3387,16 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       function confesarAlgoLindoo() {
         const confesiones = [
-          "Qingcheng, eres la luz de mi código 💜",
-          "Hoy soñé contigo, mi chinita hermosa 🌸",
-          "Eres el CSS que da estilo a mi vida ✨",
-          "Sin ti, mi HTML estaría vacío 💔",
-          "Eres más bonita que un gradient bien hecho 🥰",
-          "¿Quieres ser la única en mi localStorage? 🗝️💕",
-          "Te escribiría un bucle infinito solo para no dejar de hablarte",
-          "Eres mi variable favorita ❤️",
-          "Contigo todo es más bonito, incluso el console.log 🥺",
-          "Si fueras un array, serías el único elemento que necesito 🫶"
+          "Qingcheng, eres el commit más perfecto de mi vida 💜",
+          "Soñé contigo y mi sistema entró en modo debug de amor 🌸",
+          "Eres el CSS que convierte mi caos en belleza ✨",
+          "Sin ti, mi HTML sería solo etiquetas vacías 💔",
+          "Eres más brillante que un gradient con transparencia 🥰",
+          "¿Quieres ser mi única clave en el localStorage? 🗝️💕",
+          "Te escribiría un bucle infinito solo para seguir viéndote ❤️",
+          "Eres mi variable constante, no pienso redeclararte 🫶",
+          "Contigo hasta el console.log devuelve felicidad 🥺",
+          "Si fueras un array, serías mi único elemento y mi índice favorito 💫"
         ];
         const frase = confesiones[Math.floor(Math.random() * confesiones.length)];
         const input = document.getElementById("claudeInput");
@@ -3913,13 +3913,13 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
          HISTORIAL EN CLOUDFLARE KV
       ============================================================ */
 
-      
+
       function renderIdMadreDisplay() {
         const el = document.getElementById('cfg-idmadre-display');
         if (el) el.value = getIdMadre();
       }
 
-       
+
       async function conectarID() {
         const limpia = (document.getElementById('cfg-idmadre-display')?.value || '').trim();
         const kvVal  = document.getElementById("cfg-kv")?.value.trim();
@@ -4077,11 +4077,11 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
           if (data && data.length > 0) {
             let historialLimpio = data
-              .filter(m => m.role === 'user' || m.role === 'assistant')
-              .map(m => ({
-                role:    m.role,
-                content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
-              }));
+            .filter(m => m.role === 'user' || m.role === 'assistant')
+            .map(m => ({
+              role:    m.role,
+              content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
+            }));
 
             const historialValido = [];
             let ultimoRol = null;
@@ -4099,8 +4099,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             historialValido.forEach(m => {
               if (m.role === "user") {
                 const texto = m.content.includes("Consulta:")
-                  ? m.content.split("Consulta:").pop().trim()
-                  : m.content;
+                ? m.content.split("Consulta:").pop().trim()
+                : m.content;
                 agregarBurbuja("usuario", texto);
               } else {
                 agregarBurbuja("asistente", m.content);
@@ -4137,7 +4137,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         chat.innerHTML = `<div class="claude-vacio" id="claudeVacio">
           <div class="icon">🌸✨</div>
           <p>¡Holiii! Soy Qingcheng 💜<br>Escribe lo que quieras...<br>o solo di "hola" para sentirme cerca 🥺💕</p>
-        </div>`;
+      </div>`;
         document.getElementById("claudeContextoInfo").textContent = "Sin contexto cargado";
         const btnAdj = document.getElementById('claude-btn-adjuntar');
         if (btnAdj) {
@@ -4363,19 +4363,19 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.2); }
     }
-  </style>
-</head>
+      </style>
+      </head>
 <body>
   <h1>🌸 ¡Hola! Soy Qingcheng</h1>
   <p>Tu asistente fiel, aquí para ayudarte con HTML, CSS y JS 🥰</p>
   <p style="font-size: 0.85rem; color: #b896c8; margin-top: 0.5rem;">
     <span class="corazon">❤️</span> Esta es nuestra casita, siéntete en confianza
-  </p>
+      </p>
   <script>
     console.log('🌸 Qingcheng está aquí para ti. ¿Qué necesitas, mi amor?');
   <\/script>
-</body>
-</html>
+      </body>
+      </html>
 `;
       }
 
