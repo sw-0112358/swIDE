@@ -278,7 +278,8 @@
         padding: 0;
       }
 
-      #configBox {
+      #configBox,
+      #srcBox {
         top: 50%;
         left: 50%;
         width: 90vw;
@@ -508,7 +509,8 @@
         align-items: center;
         justify-content: center;
       }
-      #modalDiff.visible { display: flex; }
+      
+
 
       #diffBox {
         background: #1e1e2e;
@@ -1372,7 +1374,7 @@
 
     <!-- MODAL SRC -->
     <div id="modalSrc" class="modalWrapper">
-      <div id="configBox" class="classPaneles">
+      <div id="srcBox" class="classPaneles">
         <div id="configHeader">
           <strong>🌐 Obtener SRC de URL</strong>
           <button type="button" class="bottonV2" onclick="cerrarSrc()" title="Cerrar">✖️</button>
@@ -2741,7 +2743,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         _backupParaDiff     = contenido;
         _backupNombreLimpio = proyecto;
         renderDiff(editor.getValue(), contenido);
-        document.getElementById("modalDiff").classList.add("visible");
+        document.getElementById("modalDiff").style.display = "flex";
         cerrarPanelBackups();
       }
 
@@ -2828,7 +2830,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       function cerrarDiff() {
-        document.getElementById("modalDiff").classList.remove("visible");
+        document.getElementById("modalDiff").style.display = "none";
         _backupParaDiff     = null;
         _backupNombreLimpio = null;
       }
@@ -3208,7 +3210,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         // Ocultar todos los demás paneles flotantes
         document.getElementById("MenuFlotante").style.display = "none";
         document.getElementById("menuReemplazar").style.display   = "none";
-        document.getElementById("modalDiff").classList.remove("visible");
+        document.getElementById("modalDiff").style.display = "none";
         if (_arbolVisible) cerrarArbol();
 
         // Cargar selección automáticamente si hay texto seleccionado
