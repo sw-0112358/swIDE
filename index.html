@@ -1326,7 +1326,10 @@
 
       <!-- FASE 1: buscar -->
       <div id="seccionBuscar" style="display:flex;flex-direction:column;gap:8px;">
-        <label for="txtBuscar">📋 Pega el código a buscar:</label>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label for="txtBuscar">📋 Código a buscar:</label>
+          <button type="button" onclick="navigator.clipboard.readText().then(t=>document.getElementById('txtBuscar').value=t)" title="Pegar desde portapapeles">📋 Pegar</button>
+        </div>
         <textarea id="txtBuscar" placeholder="Pega aquí el fragmento original…"></textarea>
         <button type="button" onclick="buscarCodigo()">🔍 Buscar</button>
       </div>
@@ -1343,7 +1346,10 @@
 
       <!-- FASE 2: nuevo código -->
       <div id="seccionNuevo">
-        <label for="txtNuevo">🆕 Pega el código de reemplazo:</label>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label for="txtNuevo">🆕 Código de reemplazo:</label>
+          <button type="button" onclick="navigator.clipboard.readText().then(t=>document.getElementById('txtNuevo').value=t)" title="Pegar desde portapapeles">📋 Pegar</button>
+        </div>
         <textarea id="txtNuevo" placeholder="Pega aquí el nuevo código…"></textarea>
         <div style="display:flex;gap:8px;">
           <button type="button" onclick="ejecutarReemplazo()" style="flex:1;">✅ Reemplazar</button>
