@@ -1181,7 +1181,7 @@
     <div class="classPaneles" id = "MenuFlotante" >
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px;border-bottom:1px solid var(--border-menu,#cba6f7);margin-bottom:6px;flex-shrink:0;">
         <strong style="font-size:13px;color:var(--color-menu-text,#000);">
-          🪷v95❄️</strong>
+          🪷v96❄️</strong>
         <button type="button" class="bottonV2" onclick="traslape()" title="Cerrar">✖️</button>
       </div>
       <div class="botones">
@@ -3106,6 +3106,15 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       let _claudeModelo     = "deepseek";
       let _modeloOR         = "qwen/qwen3-235b-a22b:free";
       let _modeloORNombre   = "Qwen3 235B";
+
+      // Modelos activos por motor
+      const _motoresModelo = {
+        claude:     "claude-sonnet-4-6",
+        gemini:     "gemini-2.5-flash",
+        deepseek:   "deepseek-chat",
+        openrouter: "qwen/qwen3-235b-a22b:free",
+        openai:     "gpt-4o"
+      };
       let _orOpcionPendiente = null; // selección temporal antes de guardar
 
       function claudeCambiarModelo(modelo) {
@@ -3148,8 +3157,9 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       function guardarModeloOR() {
         if (_orOpcionPendiente) {
-          _modeloOR       = _orOpcionPendiente.modelo;
-          _modeloORNombre = _orOpcionPendiente.nombre;
+          _modeloOR                        = _orOpcionPendiente.modelo;
+          _modeloORNombre                  = _orOpcionPendiente.nombre;
+          _motoresModelo["openrouter"]     = _orOpcionPendiente.modelo;
         }
         _claudeModelo = "openrouter";
         // Actualizar texto del selector
@@ -3472,10 +3482,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             body: JSON.stringify({
               id:            getHistorialId(),
               configId:      getConfigId(),
-              modelo:        _claudeModelo,
-              modeloGemini:  "gemini-3.5-flash",
-              modeloOR:      _modeloOR,
-              modeloOpenAI:  "gpt-4o",
+              motor:         _claudeModelo,
+              modelo:        _claudeModelo === "openrouter" ? _modeloOR : _motoresModelo[_claudeModelo],
               mensaje:       contenidoUsuario,
               promptSistema: PromptIA()
             })
