@@ -1709,9 +1709,11 @@
       function _vConectarObs() {
         if (_vObs) { _vObs.disconnect(); _vObs = null; }
         const total = archivosDescargados.length;
-        // Trigger: primera imagen del bloque 2 relativo (índice global = bloque1 * TAM)
-        const triggerIdx = (_vBloque + 1) * _vTAM;
-        if (triggerIdx >= total) return;   // ya estamos en el último bloque
+
+        // Trigger: ÚLTIMA imagen del bloque 1 relativo (img 19 en el inicio)
+        // Cuando esa imagen es visible, el bloque 0 ya está lejos → seguro eliminarlo
+        const triggerIdx = (_vBloque + 2) * _vTAM - 1;
+        if (triggerIdx >= total) return; // no hay más bloques que cargar
         const trigger = document.querySelector(`#visor img[data-idx="${triggerIdx}"]`);
         if (!trigger) return;
 
@@ -1720,15 +1722,16 @@
           _vObs.disconnect();
           _vObs = null;
 
-          const siguienteBloque = _vBloque + 3; // bloque a agregar
-          const total2 = archivosDescargados.length;
-          if (siguienteBloque * _vTAM < total2) {
-            _vRenderBloque(siguienteBloque);     // agregar bloque adelante
+          const bloqueAgregar  = _vBloque + 3;  // bloque nuevo a renderizar al frente
+          const bloqueEliminar = _vBloque;       // bloque viejo a eliminar
+
+          if (bloqueAgregar * _vTAM < archivosDescargados.length) {
+            _vRenderBloque(bloqueAgregar);        // agregar bloque 3 adelante
           }
-          _vEliminarBloque(_vBloque);            // eliminar bloque más antiguo
-          _vBloque++;                            // avanzar ventana
-          _vConectarObs();                       // reconectar en nueva posición
-        }, { root: document.getElementById('visor'), threshold: 0.1 });
+          _vEliminarBloque(bloqueEliminar);       // eliminar bloque 0 atrás
+          _vBloque++;                             // ventana avanza 1 bloque
+          _vConectarObs();                        // reconectar en nueva posición
+        }, { root: null, threshold: 0.1 });       // root:null = viewport (más confiable en móvil)
 
         _vObs.observe(trigger);
       }
