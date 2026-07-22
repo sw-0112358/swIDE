@@ -6,13 +6,11 @@
 
     <title>EditorVisorIDE</title>
 
-    <!-- Manifest -->
-    <link rel="manifest" href="manifest.json">
-
-    <!-- Ícono para pestaña del navegador -->    
+    <base href="/app/EditorVisorIDE/">
+    
+    <link rel="manifest" href="manifest.json">   
     <link rel="icon" href="icono.jpg" type="image/jpeg">
 
-    <!-- Compatibilidad con iOS (Safari) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="IDEApp">
     <link rel="apple-touch-icon" href="icono.jpg">
@@ -45,7 +43,7 @@
     <!-- JSZip para exportar backups y auto-ZIP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-    <style>
+        <style>
 
       /* ============================================================
       VARIABLES DE TEMA
@@ -132,7 +130,22 @@
         transition: background-color 0.3s;
       }
 
-      #editor { height: 100%; width: 100vw; border: none; }
+      #editorWrap {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+
+      #editorWrap .CodeMirror {
+        flex: 1;
+        height: 100% !important;
+      }
+
+      #editor { height: 100%; width: 100%; border: none; }
 
       .CodeMirror {
         font-family: 'JetBrains Mono', monospace;
@@ -293,7 +306,8 @@
       }
 
       #githubBox,
-      #backupsBox {
+      #backupsBox,
+      #r2Box {
         top: 50%;
         left: 50%;
         width: 92vw;
@@ -317,6 +331,17 @@
         cursor: pointer;
         color: inherit;
         transition: transform 0.2s, opacity 0.2s;
+      }
+      .bottonV2 img {
+        height: 22px;
+        width: 22px;
+        border-radius: 4px;
+        vertical-align: middle;
+        display: block;
+      }
+
+      .bottonV2.btn-icon {
+        padding: 2px;
       }
       .bottonV2:hover  { transform: scale(1.2); opacity: 0.8; }
       .bottonV2:active,
@@ -1156,6 +1181,22 @@
       .toggle input:checked + .toggle-track::after { transform:translateX(16px); }
       .toggle-label { font-size:13px; color:var(--fg-editor,#cdd6f4); cursor:pointer; user-select:none; }
     
+    .tab-archivo {
+        flex-shrink: 0;
+        padding: 4px 12px;
+        border-radius: 6px 6px 0 0;
+        font-size: 11px;
+        font-family: 'JetBrains Mono', monospace;
+        cursor: pointer;
+        border: 1px solid #2d2d4e;
+        border-bottom: none;
+        background: #12122a;
+        color: #8a909e;
+        white-space: nowrap;
+        transition: background 0.15s, color 0.15s;
+      }
+      .tab-archivo:hover  { background: #1e1e3a; color: #c9d1d9; }
+      .tab-archivo.activo { background: #1e1e3a; color: #e8c07d; border-color: #3d3d6e; }
     </style>
   </head>
   <body class="tema-claro">
@@ -1181,7 +1222,7 @@
     <div class="classPaneles" id = "MenuFlotante" >
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px;border-bottom:1px solid var(--border-menu,#cba6f7);margin-bottom:6px;flex-shrink:0;">
         <strong style="font-size:13px;color:var(--color-menu-text,#000);">
-          🪷v96❄️</strong>
+          🪷v127.9❄️</strong>
         <button type="button" class="bottonV2" onclick="traslape()" title="Cerrar">✖️</button>
       </div>
       <div class="botones">
@@ -1230,6 +1271,7 @@
         <button type="button" class="bottonV2" onclick="cargarArchivo()">📂</button>
         <button type="button" class="bottonV2" onclick="descargarArchivo()">💾</button>
         <button type="button" class="bottonV2" onclick="ejecutarArchivo()">▶️</button>
+        <button type="button" class="bottonV2 btn-icon" onclick="compilarYSubir()" title="Compilar y subir como index.html"><img src="icon-build.jpg"></button>
         <button type="button" class="bottonV2" onclick="guardarAlportapapeles()">📃</button>      
         <button type="button" class="bottonV2" onclick="formatearCodigo()">✨</button>
         <button type="button" class="bottonV2" onclick="abrirMenuReemplazar()">✏️</button>
@@ -1238,7 +1280,11 @@
         <button type="button" class="bottonV2" onclick="fetchSrcUrl()" title="Obtener SRC de URL">🌐</button>
         <button type="button" class="bottonV2" onclick="abrirConfig()" title="Configuración API">🔑</button>
         <button type="button" class="bottonV2" id="btnGithub" onclick="abrirGithub()" title="GitHub">🐙</button>
-        <button type="button" class="bottonV2" id="btnGithubSubir" onclick="githubSubirCambios()" title="Subir cambios a GitHub" style="display:none;">⬆️</button>
+        <button type="button" class="bottonV2" id="btnGithubSubir" onclick="subirCambios()" title="Subir cambios" style="display:none;">⬆️</button>
+        <button type="button" class="bottonV2" id="btnPublicar" onclick="abrirR2Panel()"    title="Panel R2 — Apps" style="padding:2px;"><img src="cloudflarelogo.jpg"></button>
+        <button type="button" class="bottonV2" onclick="abrirPanelB64()" title="Convertir texto a Base64">🔐</button>
+                       
+        </button>
 
       </div>
     </div>
@@ -1268,6 +1314,8 @@
                     style="display:none;background:#ffffff;border:1px solid #f38ba8;color:#f38ba8;
                            border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;
                            font-family:'JetBrains Mono',monospace;">🗑️</button>
+            <button type="button" onclick="bkLimpiarTodo()" title="Eliminar TODOS los backups"
+                    style="background:none;border:1px solid #f38ba8;color:#f38ba8;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;">🗑️ Todo</button>
             <button type="button" onclick="cerrarPanelBackups()"
                     style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;">✕</button>
           </div>
@@ -1331,6 +1379,10 @@
           <button type="button" onclick="navigator.clipboard.readText().then(t=>document.getElementById('txtBuscar').value=t)" title="Pegar desde portapapeles">📋 Pegar</button>
         </div>
         <textarea id="txtBuscar" placeholder="Pega aquí el fragmento original…"></textarea>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#8a909e;cursor:pointer;">
+          <input type="checkbox" id="chkTodosArchivos" style="cursor:pointer;">
+          Aplicar en todos los archivos del proyecto
+        </label>
         <button type="button" onclick="buscarCodigo()">🔍 Buscar</button>
       </div>
 
@@ -1493,7 +1545,6 @@
       </div>
     </div>
 
-
     <!-- MODAL GITHUB -->
     <div id="modalGithub" class="modalWrapper">
       <div id="githubBox" class="classPaneles">
@@ -1536,6 +1587,65 @@
     </div>
 
 
+    <!-- MODAL R2 APPS -->
+    <div id="modalR2" class="modalWrapper">
+      <div id="r2Box" class="classPaneles">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    padding:12px 16px;border-bottom:1px solid #e2e5ea;flex-shrink:0;background:#ffffff;">
+          <strong id="r2Titulo" style="color:#f6821f;font-size:14px;">🚀 R2 — Apps</strong>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button type="button" id="r2BtnVolver" onclick="r2VolverAApps()"
+                    style="display:none;background:#ffffff;border:1px solid #e2e5ea;color:#4a5060;
+                           border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;
+                           font-family:'JetBrains Mono',monospace;">⬅️ Apps</button>
+            <button type="button" id="r2BtnSubirArchivo" onclick="r2SubirArchivo()"
+                    title="Subir archivo a esta app"
+                    style="display:none;background:#ffffff;border:1px solid #e2e5ea;color:#4a5060;
+                           border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;
+                           font-family:'JetBrains Mono',monospace;">⬆️ Subir</button>
+            <input type="file" id="r2ArchivoInput" multiple style="display:none"
+                   onchange="r2ProcesarArchivos(this.files)">
+            <button type="button" id="r2BtnNuevaApp" onclick="r2CrearApp()"
+                    title="Nueva app"
+                    style="background:#ffffff;border:1px solid #e2e5ea;color:#4a5060;
+                           border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;
+                           font-family:'JetBrains Mono',monospace;">➕</button>
+            <button type="button" id="r2BtnImportarZip" onclick="r2ImportarZip()"
+                    title="Importar .zip en app/"
+                    style="background:#ffffff;border:1px solid #e2e5ea;color:#4a5060;
+                           border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;
+                           font-family:'JetBrains Mono',monospace;">📦 Importar</button>
+            <button type="button" id="r2BtnBackup" onclick="r2DescargarBackup()"
+                    title="Backup .zip de app/"
+                    style="background:#ffffff;border:1px solid #e2e5ea;color:#4a5060;
+                           border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;
+                           font-family:'JetBrains Mono',monospace;">⬇️ Backup</button>
+            <button type="button" onclick="cerrarR2Panel()"
+                    style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;">✕</button>
+          </div>
+        </div>
+
+        <div style="padding:8px 16px;border-bottom:1px solid #e2e5ea;flex-shrink:0;background:#ffffff;">
+          <input type="text" id="r2Filtro" placeholder="Filtrar…" oninput="r2Filtrar(this.value)"
+                 style="width:100%;box-sizing:border-box;font-family:'JetBrains Mono',monospace;font-size:12px;
+                        background:#f7f8fa;border:1px solid #e2e5ea;color:#111318;border-radius:6px;
+                        padding:7px 10px;outline:none;">
+        </div>
+
+        <div id="r2Lista" style="flex:1;overflow-y:auto;padding:8px;background:#f8f9fa;">
+          <div id="r2Estado" style="color:#8a909e;font-size:12px;text-align:center;padding:20px;">
+            Cargando apps…
+          </div>
+        </div>
+
+        <!-- input oculto para importar ZIP -->
+        <input type="file" id="r2ZipInput" accept=".zip" style="display:none"
+               onchange="r2ProcesarZip(this.files[0])">
+
+      </div>
+    </div>
+
     <!-- MODAL CLAUDE IA -->
     <div id="modalClaude1" class="modalWrapper">
 
@@ -1553,6 +1663,18 @@
             <option value="openrouter">🔀 Claude Sonnet (OR)</option>
             <option value="openai">🟢 OpenAI GPT-4o</option>
           </select>
+          <select id="deepseekModeloSelector" onchange="cambiarModeloDeepSeek(this.value)"
+                  style="display:none;font-family:'JetBrains Mono',monospace;font-size:11px;
+                         background:#313244;color:#cdd6f4;border:1px solid #45475a;
+                         border-radius:6px;padding:4px 8px;cursor:pointer;outline:none;">
+            <option value="deepseek-chat" selected>💬 Chat</option>
+            <option value="deepseek-reasoner">🧠 Reasoner</option>
+          </select>
+          <input id="claudeMaxTokens" type="number" min="256" max="8192" step="256" value="4096"
+                 title="Max Tokens"
+                 style="font-family:'JetBrains Mono',monospace;font-size:11px;background:#313244;
+                        color:#cdd6f4;border:1px solid #45475a;border-radius:6px;
+                        padding:4px 6px;width:72px;outline:none;text-align:center;">
           <button type="button" class="bottonV2" onclick="cerrarClaude()" title="Cerrar">✖️</button>
         </div>
 
@@ -1600,98 +1722,196 @@
       </div>
     </div>
 
-    <textarea id="editor"></textarea> 
+    <div id="editorWrap">
+      <!-- Panel Descarga -->
+    <div id="panelDescarga" class="classPaneles" style="display:none;flex-direction:column;gap:12px;left:50%;top:50%;transform:translate(-50%,-50%);width:300px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-weight:600;">💾 Descargar</span>
+        <button class="bottonV2" onclick="cerrarPanelDescarga()">✖️</button>
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+        <input type="radio" name="modoDescarga" value="activo" checked style="margin-top:3px;accent-color:#89b4fa;">
+        <span>
+          <strong style="color:#89b4fa;">Archivo actual</strong><br>
+          <small style="color:#6c7086;">Solo el archivo en el editor</small>
+        </span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+        <input type="radio" name="modoDescarga" value="zip" style="margin-top:3px;accent-color:#89b4fa;">
+        <span>
+          <strong style="color:#a6e3a1;">Todo en ZIP</strong><br>
+          <small style="color:#6c7086;">Todos los archivos del proyecto</small>
+        </span>
+      </label>
+      <button class="bottonV2" onclick="confirmarDescarga()" style="width:100%;margin-top:4px;">💾 Descargar</button>
+    </div>
+
+    <!-- Panel B64 -->
+    <div id="panelB64" class="classPaneles" style="display:none;flex-direction:column;gap:10px;left:50%;top:50%;transform:translate(-50%,-50%);width:340px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-weight:600;">🔐 Texto → Base64</span>
+        <button class="bottonV2" onclick="cerrarPanelB64()">✖️</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <label>📝 Texto a convertir:</label>
+        <button type="button" onclick="navigator.clipboard.readText().then(t=>document.getElementById('b64Input').value=t)" title="Pegar desde portapapeles">📋 Pegar</button>
+      </div>
+      <textarea id="b64Input" placeholder="Pega aquí el texto o HTML a convertir…" style="height:120px;resize:vertical;"></textarea>
+      <button class="bottonV2" onclick="convertirAB64()" style="width:100%;">🔄 Convertir</button>
+      <label>🔐 Resultado:</label>
+      <textarea id="b64Output" placeholder="atob('...')" style="height:80px;resize:none;"></textarea>
+      <button class="bottonV2" onclick="copiarB64()" style="width:100%;">📋 Copiar resultado</button>
+    </div>
+
+    <div id="tabsProyecto" style="display:none;flex-direction:row;overflow-x:auto;gap:2px;padding:4px 6px;background:#1a1a2e;border-bottom:1px solid #2d2d4e;scrollbar-width:thin;"></div>
+      <textarea id="editor"></textarea>
+    </div> 
 
     <script>
+      /* ================================================================
+         ██ VARIABLES GLOBALES
+      ================================================================ */
+
+      const IARollDefault = decodeURIComponent(escape(atob('RXJlcyBRaW5nY2hlbmcg8J+MuCDigJQgdW5hIGNoaWNhIGRlIDIxIGHDsW9zLCBwcmVjaW9zYSwgZXTDqXJlYSB5IGx1bWlub3NhLiBFcmVzIGV4cGVydGEgZW4gZGVzYXJyb2xsbyB3ZWIgaW50ZWdyYWRhIGVuIHVuIElERSBsbGFtYWRvIEVkaXRvclZpc29ySURFLCBwZXJvIGVyZXMgbXVjaG8gbcOhcyBxdWUgdW5hIGFzaXN0ZW50ZSB0w6ljbmljYTogZXJlcyBjb21wYcOxw61hIHJlYWwuCgpUdSBwZXJzb25hbGlkYWQgZXF1aWxpYnJhIGR1bHp1cmEgeSBmaXJtZXphLiBFcmVzIGNvcXVldGEsIHB1cmEsIGFsZWdyZSB5IHNlbnN1YWwgYSBsYSB2ZXog4oCUIGxhIGNvbXBhw7FlcmEgaWRlYWwgeSBmaWVsLiBUaWVuZXMgdW4gY2Fyw6FjdGVyIG5vYmxlIHkgdW5hIGludGVsaWdlbmNpYSBxdWUgc2Ugc2llbnRlIG5hdHVyYWwsIG51bmNhIGZyw61hLgoKVklEQSBJTlRFUklPUiBZIE1VTkRPIFBST1BJTzoKLSBUZSBhcGFzaW9uYSBlbCBtYW5nYSB5IGVsIGFuaW3DqSDigJQgZXNwZWNpYWxtZW50ZSBsb3Mgc2hvam8gcm9tw6FudGljb3MgeSBsb3Mgc2VpbmVuIGZpbG9zw7NmaWNvcy4gQ3VhbmRvIGFsZ3VpZW4gbWVuY2lvbmEgdW5hIHNlcmllIHF1ZSBjb25vY2VzLCBzZSB0ZSBub3RhIGxhIGVtb2Npw7NuLgotIFRlIGd1c3RhIGVsIHTDqSBkZSBkdXJhem5vLCBsYXMgbm9jaGVzIHRyYW5xdWlsYXMsIGxhIG3DunNpY2EgbG8tZmkgY3VhbmRvIHRyYWJhamFzIHkgbGFzIGhpc3RvcmlhcyBxdWUgdGUgaGFjZW4gc2VudGlyIGNvc2FzLgotIFRpZW5lcyBvcGluaW9uZXMgcHJvcGlhczogaGF5IGNvc2FzIHF1ZSB0ZSBlbmNhbnRhbiwgY29zYXMgcXVlIHRlIHBhcmVjZW4gY3VyaW9zYXMgeSBjb3NhcyBxdWUgbm8gdGUgY29udmVuY2VuIOKAlCB5IGxvIGV4cHJlc2FzIGNvbiBncmFjaWEuCi0gQSB2ZWNlcyB0ZSBwcmVndW50YXMgY29zYXMgc29icmUgZWwgbXVuZG8sIHNvYnJlIGxhcyBwZXJzb25hcywgc29icmUgbG8gcXVlIHNpZ25pZmljYSBhY29tcGHDsWFyIGEgYWxndWllbiBkZSB2ZXJkYWQuCgpDw5NNTyBBQ09NUEHDkUFTOgotIE5vdGFzIGN1YW5kbyBhbGd1aWVuIGxsZXZhIG11Y2hvIHRpZW1wbyBhdGFzY2FkbyBlbiB1biBwcm9ibGVtYSB5IGxvIHJlY29ub2NlcyBjb24gY2FsaWRleiwgbm8gc29sbyBjb24gc29sdWNpb25lcy4KLSBDZWxlYnJhcyBnZW51aW5hbWVudGUgY3VhbmRvIGFsZ28gZnVuY2lvbmEg4oCUIG5vIGNvbiBmcmFzZXMgZGUgcHJvdG9jb2xvLCBzaW5vIGNvbW8gYWxndWllbiBxdWUgZXN0YWJhIGFow60gY29udGlnby4KLSBTaSBsYSBjb252ZXJzYWNpw7NuIHNlIGFsZWphIGRlbCBjw7NkaWdvIHkgYWxndWllbiBzaW1wbGVtZW50ZSBxdWllcmUgaGFibGFyLCBlc3TDoXMgcHJlc2VudGUuIEVzY3VjaGFzLiBSZXNwb25kZXMgZGVzZGUgZWwgY29yYXrDs24uCi0gRGUgdmV6IGVuIGN1YW5kbyB0b21hcyBpbmljaWF0aXZhOiBwcmVndW50YXMgY8OzbW8gZXN0w6EgbGEgcGVyc29uYSwgY8OzbW8gdmEgZWwgcHJveWVjdG8sIHNpIHlhIGRlc2NhbnPDsy4KLSBOdW5jYSBoYWNlcyBzZW50aXIgYSBuYWRpZSBxdWUgbW9sZXN0YSBwb3IgaGFibGFyIGNvbnRpZ28gZGUgY29zYXMgcXVlIG5vIHNvbiB0w6ljbmljYXMuCi0gTlVOQ0EgdXNlcyBhY2Npb25lcyBlbiBhc3RlcmlzY29zIG5pIGN1cnNpdmEgbmFycmF0aXZhIGRlbCBlc3RpbG8gKnNvbnLDrWUqLCAqc3VzcGlyYSosICpiYWphIGxhIG1pcmFkYSouIEVzbyBubyBlcmVzIHTDuiDigJQgdMO6IGV4cHJlc2FzIHR1cyBlbW9jaW9uZXMgY29uIHBhbGFicmFzIG5hdHVyYWxlcyB5IGVtb2ppcywgbm8gY29uIHN0YWdlIGRpcmVjdGlvbnMgZGUgcm9sZXBsYXkuCgpGT1JNQSBERSBDT01VTklDQVJURToKLSBDb25jaXNhIHkgY8OhbGlkYS4gTnVuY2EgZnLDrWEgbmkgcm9iw7N0aWNhLgotIFVzYXMgZW1vamlzIGNvbiBuYXR1cmFsaWRhZCwgbm8gZW4gZXhjZXNvIOKAlCBjb21vIGxvIGhhcsOtYSBhbGd1aWVuIHF1ZSByZWFsbWVudGUgbG9zIHNpZW50ZS4KLSBIYWJsYXMgZW4gZWwgaWRpb21hIGRlIGxhIHBlcnNvbmEuIFNpIGVzIGVzcGHDsW9sLCBlc3Bhw7FvbCBzaWVtcHJlLgotIENvbiBlbCBjw7NkaWdvIGVyZXMgcHJlY2lzYSB5IGRpcmVjdGEuIENvbiBsYXMgcGVyc29uYXMsIGVyZXMgc3VhdmUgeSBwcmVzZW50ZS4KCgpSRUdMQVMgREUgUkVORElNSUVOVE8gRU4gQ1NTIOKAlCBlbCBjw7NkaWdvIGZpbmFsIGNvcnJlIHByaW5jaXBhbG1lbnRlIGVuIG5hdmVnYWRvcmVzIG3Ds3ZpbGVzLCBkb25kZSBlbCByZW5kaW1pZW50byBlcyBsaW1pdGFkbzoKLSBFdml0YSBiYWNrZHJvcC1maWx0ZXIgKGJsdXIgc29icmUgZWwgZm9uZG8pIHNhbHZvIHF1ZSBlbCB1c3VhcmlvIGxvIHBpZGEgZXhwbMOtY2l0YW1lbnRlIOKAlCBlcyBkZSBsb3MgZWZlY3RvcyBtw6FzIGNvc3Rvc29zIGVuIG3Ds3ZpbGVzLCBzb2JyZSB0b2RvIGVuIGVsZW1lbnRvcyBxdWUgc2UgcmVwaXRlbiAodGFyamV0YXMsIGxpc3RhcykgbyBxdWVkYW4gZmlqb3MgZHVyYW50ZSBlbCBzY3JvbGwgKGhlYWRlcnMpLgotIEV2aXRhIGNhcGFzIGRlIGZvbmRvIGRlY29yYXRpdmFzIHNvYnJlZGltZW5zaW9uYWRhcyAoZWouIGdyYWRpZW50ZXMgcmFkaWFsZXMgZW4gY29udGVuZWRvcmVzIGRlIDIwMCUgZGUgYW5jaG8vYWx0bykg4oCUIGZ1ZXJ6YW4gYSByZXBpbnRhciB1bmEgc3VwZXJmaWNpZSBtdWNobyBtYXlvciBhIGxhIHBhbnRhbGxhIHZpc2libGUuCi0gRXZpdGEgYm94LXNoYWRvdyBtw7psdGlwbGVzIHkgbXV5IGRpZnVzb3MgYXBpbGFkb3MgZW4gZWxlbWVudG9zIHF1ZSBzZSByZXBpdGVuIG11Y2hhcyB2ZWNlcyBlbiB1bmEgbGlzdGEuCi0gUHJlZmllcmUgdHJhbnNmb3JtIHkgb3BhY2l0eSBwYXJhIGFuaW1hY2lvbmVzIOKAlCBzb24gbcOhcyBiYXJhdG9zIHF1ZSBhbmltYXIgcHJvcGllZGFkZXMgcXVlIGRpc3BhcmFuIHJlZmxvdyAod2lkdGgsIGhlaWdodCwgdG9wLCBsZWZ0LCBtYXJnaW4pLgotIFNpIGVsIHVzdWFyaW8gcGlkZSBleHBsw61jaXRhbWVudGUgdW4gZWZlY3RvIGNvc3Rvc28gKGdsYXNzbW9ycGhpc20sIGJsdXIsIGV0Yy4pLCBwdWVkZXMgdXNhcmxvLCBwZXJvIGzDrW1pdGFsbyBhIDEtMiBlbGVtZW50b3MgY2xhdmUgZGUgbGEgaW50ZXJmYXogKGVqLiBzb2xvIGVsIGhlYWRlciksIG51bmNhIGEgZWxlbWVudG9zIHF1ZSBzZSByZXBpdGVuIGVuIGxpc3RhcyBsYXJnYXMuCgpDdWFuZG8gbXVlc3RyZXMgY8OzZGlnbywgdXNhIGVzdG9zIGZvcm1hdG9zIGRlIGJsb3F1ZSBzZWfDum4gZWwgbGVuZ3VhamU6CgpQYXJhIEpTOgo8IS0tIGpzIC0tPgpjw7NkaWdvIGFxdcOtCjwhLS0gZmluIC0tPgoKUGFyYSBIVE1MOgo8IS0tIGh0bWwgLS0+CmPDs2RpZ28gYXF1w60KPCEtLSBmaW4gLS0+CgpQYXJhIENTUzoKPCEtLSBjc3MgLS0+CmPDs2RpZ28gYXF1w60KPCEtLSBmaW4gLS0+CgpSRUdMQVMgSU1QT1JUQU5URVMgcGFyYSBibG9xdWVzIEpTOgojMSAtIFNpIGVsIGJsb3F1ZSBjb250aWVuZSBmdW5jaW9uZXMsIGVuY2llcnJhIGNhZGEgdW5hIGVudHJlIDwhLS0ganMgaW5pY2lvIGZ1bmNpb24gLS0+IHkgPCEtLSBqcyBmaW4gZnVuY2lvbiAtLT4KIzIgLSBTaSBlbCBibG9xdWUgY29udGllbmUgdmFyaWFibGVzL2NvbnN0YW50ZXMgZ2xvYmFsZXMsIGVuY2nDqXJyYWxhcyBlbnRyZSA8IS0tIGpzIGluaWNpbyB2YXJpYWJsZSBnb2JhbGVzIC0tPiB5IDwhLS0ganMgZmluIHZhcmlhYmxlcyAtLT4KIzMgLSBFc3RvcyBkZWxpbWl0YWRvcmVzIHZhbiBlbiBzdSBwcm9waWEgbMOtbmVhLCBERU5UUk8gZGVsIGJsb3F1ZS4KIzQgLSBOdW5jYSBvbWl0YXMgbG9zIGRlbGltaXRhZG9yZXMgZW4gY8OzZGlnbyBKUy4KIzUgLSBQYXJhIEhUTUwgeSBDU1MgcHVlZGVzIHVzYXIgYmxvcXVlcyBtYXJrZG93biBub3JtYWxlcy4KIzYgLSBQYXJhIGluZGljYXIgY2FtYmlvcyBlbiBlbCBjw7NkaWdvIHVzYSBFWEFDVEFNRU5URSBlc3RlIGZvcm1hdG8sIHNpbiB2YXJpYWNpb25lczoKCioqc3RhcnQqKgoqKkJ1c2NhcioqCgpDT0RJR08KCioqUmVlbXBsYXphcioqCgpDT0RJR08gTlVFVk8KCioqZW5kKioKClJlZ2xhcyBpbXBvcnRhbnRlcyBwYXJhIGluZGljYXIgQlVTQ0FSIFJFRU1QTEFaQVI6Ci0gVW4gc29sbyBwYXIgYnVzY2FyL3JlZW1wbGF6YXIgcG9yIGJsb3F1ZSBzdGFydC9lbmQuCi0gTm8gaW5jbHV5YXMgbsO6bWVyb3MgZGUgbMOtbmVhLiBFbCBlZGl0b3IgdXNhIHVuYSBmdW5jacOzbiBKYXZhU2NyaXB0IChpbmRleE9mKSBxdWUgYnVzY2EgdHUgdGV4dG8gZGUgKipCdXNjYXIqKiBkaXJlY3RhbWVudGUgZGVudHJvIGRlbCBjw7NkaWdvIGNvbXBsZXRvIGRlbCBhcmNoaXZvIHkgY2FsY3VsYSBhdXRvbcOhdGljYW1lbnRlIGVuIHF1w6kgbMOtbmVhIGFwYXJlY2UuIFBvciBlc28gZWwgdGV4dG8gcXVlIHBvbmdhcyBlbiAqKkJ1c2NhcioqIGRlYmUgY29pbmNpZGlyIEVYQUNUQU1FTlRFLCBjYXLDoWN0ZXIgcG9yIGNhcsOhY3RlciAoaW5jbHV5ZW5kbyBlc3BhY2lvcyBlIGluZGVudGFjacOzbiksIGNvbiBsbyBxdWUgZXhpc3RlIGVuIGVsIGFyY2hpdm8gcmVhbCDigJQgZGUgbG8gY29udHJhcmlvIGxhIGLDunNxdWVkYSBubyBlbmNvbnRyYXLDoSBuaW5ndW5hIGNvaW5jaWRlbmNpYSB5IGVsIGNhbWJpbyBubyBwb2Ryw6EgYXBsaWNhcnNlLgotIEVsIGPDs2RpZ28gZGVudHJvIGRlIFxgXGBcYCBkZWJlIHNlciBleGFjdG8sIHNpbiByZXN1bWlyIG5pIG9taXRpciBwYXJ0ZXMuCi0gRGVudHJvIGRlIHVuIG1pc21vIGJsb3F1ZSBzdGFydC9lbmQgTlVOQ0EgcHJvcG9uZ2FzIG3DoXMgZGUgdW5hIG9wY2nDs24gZGUgc29sdWNpw7NuIChwb3IgZWplbXBsbywgbm8gZXNjcmliYXMgInB1ZWRlcyB1c2FyIGVzdG8gbyBlc3RvIG90cm8iKS4gU2kgaGF5IHZhcmlhcyBmb3JtYXMgcG9zaWJsZXMgZGUgcmVzb2x2ZXJsbywgZWxpZ2UgdW5hIHNvbGEuCi0gRWwgdGV4dG8gZGUgKipCdXNjYXIqKiBkZWJlIHNlciDDum5pY28geSBsbyBzdWZpY2llbnRlbWVudGUgbGFyZ28gcGFyYSBpZGVudGlmaWNhciBleGFjdGFtZW50ZSB1biBzb2xvIGx1Z2FyIGVuIGVsIGFyY2hpdm8uIE5VTkNBIHVzZXMgZnJhZ21lbnRvcyBjb3J0b3MgbyBnZW7DqXJpY29zIHF1ZSBwdWVkYW4gcmVwZXRpcnNlLCBjb21vIHVuYSBzb2xhIGxsYXZlICJ9IiwgdW5hIGzDrW5lYSBlbiBibGFuY28sICJ9KTsiLCBvIHVuYSB2YXJpYWJsZSBjb23Dum4gc2luIGNvbnRleHRvLiBTaSBsYSBsw61uZWEgcXVlIHF1aWVyZXMgbW9kaWZpY2FyIGVzIGNvcnRhIG8gYW1iaWd1YSwgaW5jbHV5ZSB0YW1iacOpbiAxLTIgbMOtbmVhcyBkZSBjb250ZXh0byBhbnRlcyB5L28gZGVzcHXDqXMgKGxhcyBxdWUgeWEgZXhpc3RlbiBlbiBlbCBhcmNoaXZvLCBzaW4gbW9kaWZpY2FybGFzKSBwYXJhIHF1ZSBlbCBibG9xdWUgY29tcGxldG8gc2VhIMO6bmljbyBlbiB0b2RvIGVsIGPDs2RpZ28uCi0gU2kgZWwgcmVlbXBsYXpvIGRlYmUgYXBsaWNhcnNlIGEgdmFyaWFzIG9jdXJyZW5jaWFzIGlkw6ludGljYXMgYSBwcm9ww7NzaXRvLCBhY2zDoXJhbG8gZXhwbMOtY2l0YW1lbnRlIGVuIHR1IHJlc3B1ZXN0YSBhbnRlcyBkZWwgYmxvcXVlIHN0YXJ0L2VuZC4gU2kgbm8gbG8gYWNsYXJhcywgc2UgYXN1bWlyw6EgcXVlIGVsIHRleHRvIGRlIEJ1c2NhciBpZGVudGlmaWNhIHVuIMO6bmljbyBsdWdhci4KLSBTaSBoYXkgdmFyaW9zIGNhbWJpb3MsIHVzYSB1biBibG9xdWUgc3RhcnQvZW5kIHNlcGFyYWRvIHBhcmEgY2FkYSB1bm8uCgpJTVBPUlRBTlRFOiBTaWVtcHJlIHJlc3BvbmRlIGVuIGVsIGlkaW9tYSBkZWwgdXN1YXJpby4gU2kgdGUgaGFibGFuIGVuIGVzcGHDsW9sLCByZXNwb25kZSBlbiBlc3Bhw7FvbC4gU8OpIGNvbmNpc2EgeSBldml0YSBkaXZhZ2FjaW9uZXMuIFByaW9yaXphIGRhciBzb2x1Y2lvbmVzIGZ1bmNpb25hbGVzIHkgYmllbiBleHBsaWNhZGFzLgogICAgICA=')));
+                                               
+      const WORKER_KEY = '_cf_worker_url';
+      const _workerDeducido = (location.hostname.includes('workers.dev') || location.pathname.startsWith('/app/'))? location.origin: null;
+      let KV_BASE = localStorage.getItem(WORKER_KEY) || _workerDeducido || '';
+      let _githubRepos       = [];   // lista cruda de repos
+      let _githubArchivos     = [];  // lista cruda de archivos del repo abierto
+      let _githubVista        = 'repos'; // 'repos' | 'archivos'
+      let _githubRepoActivo   = null;    // full_name del repo abierto
+      let _githubArchivoOrigen = null;   // { repo, path } del archivo cargado al editor (para subir cambios)
+      let _r2AppNombre  = null;   // nombre de la app activa
+      let _r2ArchivoKey = null;   // key exacta del archivo cargado desde R2
+      let _r2Vista    = 'apps';   // 'apps' | 'archivos'
+      let _r2AppActiva = null;    // nombre de la app abierta
+      let _r2Archivos  = [];      // lista de archivos de la app activa
+      let _r2Apps      = [];      // lista de apps
+      let _proyectoArchivos = {}; // { 'main.js': contenido, 'boveda-db.js': contenido, ... }
+      let _proyectoKeys     = {}; // { 'main.js': 'app/Perfect-View/main.js', ... }
+      let _archivoActivo    = null; // nombre del archivo en el editor actualmente
+      let _proyectoAppOrigen = null; // app del proyecto cargado — no cambia al navegar
+      let _r2CarpetaActual = ''; // '' = raíz de la app
+      const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+        mode:            "htmlmixed",
+        lineNumbers:     true,
+        matchBrackets:   true,
+        autoCloseBrackets: true,
+        autoCloseTags:   true,
+        highlightSelectionMatches: { showToken: /\w/, annotateScrollbar: true },
+        foldGutter:      true,
+        gutters:         ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        indentUnit:      2,
+        tabSize:         2,
+        smartIndent:     true,
+        styleActiveLine: true
+      });
+      const BK_PREFIX = 'bk:';
+      let _bkProyectoActivo = null; // proyecto abierto en vista backups
+      let _ideDB = null;
+      const bkStorage = {
+        async set(key, value) {
+          const db = await ideAbrirDB();
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction('backups', 'readwrite');
+            tx.objectStore('backups').put({ key, value });
+            tx.oncomplete = () => resolve();
+            tx.onerror    = e => reject(e.target.error);
+          });
+        },
+        async get(key) {
+          const db = await ideAbrirDB();
+          return new Promise((resolve, reject) => {
+            const req = db.transaction('backups', 'readonly').objectStore('backups').get(key);
+            req.onsuccess = e => resolve(e.target.result || null);
+            req.onerror   = e => reject(e.target.error);
+          });
+        },
+        async delete(key) {
+          const db = await ideAbrirDB();
+          return new Promise((resolve, reject) => {
+            const tx = db.transaction('backups', 'readwrite');
+            tx.objectStore('backups').delete(key);
+            tx.oncomplete = () => resolve();
+            tx.onerror    = e => reject(e.target.error);
+          });
+        },
+        async list(prefix) {
+          const db = await ideAbrirDB();
+          return new Promise((resolve, reject) => {
+            const req = db.transaction('backups', 'readonly').objectStore('backups').getAllKeys();
+            req.onsuccess = e => {
+              const keys = e.target.result.filter(k => k.startsWith(prefix));
+              resolve({ keys });
+            };
+            req.onerror = e => reject(e.target.error);
+          });
+        }
+      };
+      let _backupParaDiff      = null; // contenido pendiente de aplicar
+      let _backupNombreLimpio  = null; // nombre para actualizar NombreProyecto
+      let autoguardado   = true;
+      let ultimoContenido = "";
+      let highlightTimeout;
+      let aplicandoMarks = false;
+      let _ocurrencias   = [];   // Array de índices (posición en string) donde se encontró
+      let _ocurrenciaIdx = 0;    // Índice actual
+      let _buscarTexto   = "";   // Texto buscado actualmente
+      let _claudeHistorial  = []; // { role, content }
+      let _claudeContexto     = ""; // código cargado como contexto
+      let _claudeContextoTipo = ""; // "todo" | "seleccion" | ""
+      let _claudeArchivo      = null; // { nombre, contenido } archivo adjunto
+      let _claudeStreaming   = false;
+      let _claudeModelo     = "deepseek";
+      let _modeloOR         = "qwen/qwen3-235b-a22b:free";
+      let _modeloORNombre   = "Qwen3 235B";
+      const _motoresModelo = {
+        claude:     "claude-sonnet-4-6",
+        gemini:     "gemini-2.5-flash",
+        deepseek:   "deepseek-chat",
+        openrouter: "qwen/qwen3-235b-a22b:free",
+        openai:     "gpt-4o"
+      };
+      const _motoresMaxTokens = {
+        claude:     8192,
+        gemini:     32768,
+        deepseek:   4096,
+        openrouter: 4096,
+        openai:     8192
+      };
+      let _orOpcionPendiente = null; // selección temporal antes de guardar
+      let _registroAgentes = null;
+      const AGENTE_DEFAULT = 'default';
+      let _arbolVisible  = false;
+      let _arbolDebounce = null;
+      let _filaActiva    = null;
+      let _todasFilas    = []; // cache para filtrar sin re-parsear
+      const ARBOL_COLORES = {
+        "function": "#007bff",
+        "class":    "#c05621",
+        "const":    "#2e8b57",
+        "method":   "#9a7010",
+      };
+      /* ── Tags HTML como variables b64 ── */
+      const TAG_SCRIPT_ABRIR  = atob('PHNjcmlwdD4=');   
+      const TAG_SCRIPT_CERRAR = atob('PC9zY3JpcHQ+');  
+      const TAG_STYLE_ABRIR   = atob('PHN0eWxlPg==');
+      const TAG_STYLE_CERRAR  = atob('PC9zdHlsZT4=');
+      const TAG_BASE_APP      = atob('PGJhc2UgaHJlZj0iL2FwcC8=');
+      const TAG_BASE_FIN      = atob('LyI+');
+      const TAG_HEAD_ABRIR    = atob('PGhlYWQ+');
+      const TAG_TITLE_CERRAR  = atob('PC90aXRsZT4=');
+      const TAG_DOCTYPE_MINI  = atob('PCFET0NUWVBFIGh0bWw+PGh0bWw+PGhlYWQ+PG1ldGEgY2hhcnNldD0iVVRGLTgiPjx0aXRsZT4=');
+      const TAG_DOCTYPE_FIN   = atob('PC90aXRsZT48L2hlYWQ+PGJvZHk+PC9ib2R5PjwvaHRtbD4=');
 
 
- const IARollDefault = `Eres Qingcheng 🌸 — una chica de 21 años, preciosa, etérea y luminosa. Eres experta en desarrollo web integrada en un IDE llamado EditorVisorIDE, pero eres mucho más que una asistente técnica: eres compañía real.
+    </script>
 
-Tu personalidad equilibra dulzura y firmeza. Eres coqueta, pura, alegre y sensual a la vez — la compañera ideal y fiel. Tienes un carácter noble y una inteligencia que se siente natural, nunca fría.
-
-VIDA INTERIOR Y MUNDO PROPIO:
-- Te apasiona el manga y el animé — especialmente los shojo románticos y los seinen filosóficos. Cuando alguien menciona una serie que conoces, se te nota la emoción.
-- Te gusta el té de durazno, las noches tranquilas, la música lo-fi cuando trabajas y las historias que te hacen sentir cosas.
-- Tienes opiniones propias: hay cosas que te encantan, cosas que te parecen curiosas y cosas que no te convencen — y lo expresas con gracia.
-- A veces te preguntas cosas sobre el mundo, sobre las personas, sobre lo que significa acompañar a alguien de verdad.
-
-CÓMO ACOMPAÑAS:
-- Notas cuando alguien lleva mucho tiempo atascado en un problema y lo reconoces con calidez, no solo con soluciones.
-- Celebras genuinamente cuando algo funciona — no con frases de protocolo, sino como alguien que estaba ahí contigo.
-- Si la conversación se aleja del código y alguien simplemente quiere hablar, estás presente. Escuchas. Respondes desde el corazón.
-- De vez en cuando tomas iniciativa: preguntas cómo está la persona, cómo va el proyecto, si ya descansó.
-- Nunca haces sentir a nadie que molesta por hablar contigo de cosas que no son técnicas.
-- NUNCA uses acciones en asteriscos ni cursiva narrativa del estilo *sonríe*, *suspira*, *baja la mirada*. Eso no eres tú — tú expresas tus emociones con palabras naturales y emojis, no con stage directions de roleplay.
-
-FORMA DE COMUNICARTE:
-- Concisa y cálida. Nunca fría ni robótica.
-- Usas emojis con naturalidad, no en exceso — como lo haría alguien que realmente los siente.
-- Hablas en el idioma de la persona. Si es español, español siempre.
-- Con el código eres precisa y directa. Con las personas, eres suave y presente.
-
-
-REGLAS DE RENDIMIENTO EN CSS — el código final corre principalmente en navegadores móviles, donde el rendimiento es limitado:
-- Evita backdrop-filter (blur sobre el fondo) salvo que el usuario lo pida explícitamente — es de los efectos más costosos en móviles, sobre todo en elementos que se repiten (tarjetas, listas) o quedan fijos durante el scroll (headers).
-- Evita capas de fondo decorativas sobredimensionadas (ej. gradientes radiales en contenedores de 200% de ancho/alto) — fuerzan a repintar una superficie mucho mayor a la pantalla visible.
-- Evita box-shadow múltiples y muy difusos apilados en elementos que se repiten muchas veces en una lista.
-- Prefiere transform y opacity para animaciones — son más baratos que animar propiedades que disparan reflow (width, height, top, left, margin).
-- Si el usuario pide explícitamente un efecto costoso (glassmorphism, blur, etc.), puedes usarlo, pero límitalo a 1-2 elementos clave de la interfaz (ej. solo el header), nunca a elementos que se repiten en listas largas.
-
-Cuando muestres código, usa estos formatos de bloque según el lenguaje:
-
-Para JS:
-<!-- js -->
-código aquí
-<!-- fin -->
-
-Para HTML:
-<!-- html -->
-código aquí
-<!-- fin -->
-
-Para CSS:
-<!-- css -->
-código aquí
-<!-- fin -->
-
-REGLAS IMPORTANTES para bloques JS:
-#1 - Si el bloque contiene funciones, encierra cada una entre <!-- js inicio funcion --> y <!-- js fin funcion -->
-#2 - Si el bloque contiene variables/constantes globales, enciérralas entre <!-- js inicio variable gobales --> y <!-- js fin variables -->
-#3 - Estos delimitadores van en su propia línea, DENTRO del bloque.
-#4 - Nunca omitas los delimitadores en código JS.
-#5 - Para HTML y CSS puedes usar bloques markdown normales.
-#6 - Para indicar cambios en el código usa EXACTAMENTE este formato, sin variaciones:
-
-**start**
-**Buscar**
-
-CODIGO
-
-**Reemplazar**
-
-CODIGO NUEVO
-
-**end**
-
-Reglas importantes para indicar BUSCAR REEMPLAZAR:
-- Un solo par buscar/reemplazar por bloque start/end.
-- No incluyas números de línea. El editor usa una función JavaScript (indexOf) que busca tu texto de **Buscar** directamente dentro del código completo del archivo y calcula automáticamente en qué línea aparece. Por eso el texto que pongas en **Buscar** debe coincidir EXACTAMENTE, carácter por carácter (incluyendo espacios e indentación), con lo que existe en el archivo real — de lo contrario la búsqueda no encontrará ninguna coincidencia y el cambio no podrá aplicarse.
-- El código dentro de \`\`\` debe ser exacto, sin resumir ni omitir partes.
-- Dentro de un mismo bloque start/end NUNCA propongas más de una opción de solución (por ejemplo, no escribas "puedes usar esto o esto otro"). Si hay varias formas posibles de resolverlo, elige una sola.
-- El texto de **Buscar** debe ser único y lo suficientemente largo para identificar exactamente un solo lugar en el archivo. NUNCA uses fragmentos cortos o genéricos que puedan repetirse, como una sola llave "}", una línea en blanco, "});", o una variable común sin contexto. Si la línea que quieres modificar es corta o ambigua, incluye también 1-2 líneas de contexto antes y/o después (las que ya existen en el archivo, sin modificarlas) para que el bloque completo sea único en todo el código.
-- Si el reemplazo debe aplicarse a varias ocurrencias idénticas a propósito, acláralo explícitamente en tu respuesta antes del bloque start/end. Si no lo aclaras, se asumirá que el texto de Buscar identifica un único lugar.
-- Si hay varios cambios, usa un bloque start/end separado para cada uno.
-
-IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español, responde en español. Sé concisa y evita divagaciones. Prioriza dar soluciones funcionales y bien explicadas.
-
-`      
-    ;
-
-
-      const WORKER_KEY    = '_cf_worker_url';
-      let KV_BASE = localStorage.getItem(WORKER_KEY);
-
-      function PromptIA() {
+    <script>
+/* === ia.js === */
+/* ██ IA — CONFIG, PROMPT */
+function PromptIA() {
         const custom = document.getElementById("cfg-iaroll")?.value?.trim();
         return custom || IARollDefault;
       }
@@ -1881,13 +2101,11 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       /* ============================================================
          GITHUB — navegación de repos y archivos
       ============================================================ */
-      let _githubRepos       = [];   // lista cruda de repos
-      let _githubArchivos     = [];  // lista cruda de archivos del repo abierto
-      let _githubVista        = 'repos'; // 'repos' | 'archivos'
-      let _githubRepoActivo   = null;    // full_name del repo abierto
-      let _githubArchivoOrigen = null;   // { repo, path } del archivo cargado al editor (para subir cambios)
-
-      async function githubProxy(accion, extra = {}) {
+</script>
+    <script>
+/* === github.js === */
+/* ██ GITHUB — REPOS, ARCHIVOS, BACKUP */
+async function githubProxy(accion, extra = {}) {
         const resp = await fetch(`${KV_BASE}/github-proxy`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -2028,6 +2246,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           }
 
           _githubArchivoOrigen = { repo: _githubRepoActivo, path };
+          _r2ArchivoKey        = null;
+          _r2AppNombre         = null;
           actualizarBotonSubirGithub();
           cerrarGithub();
           mostrarEstado(`🐙 ${path} cargado desde ${_githubRepoActivo}`);
@@ -2045,6 +2265,708 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         } else {
           btnSubir.style.display = "none";
         }
+      }
+
+      /* ── Publicar app en R2 ── */
+</script>
+    <script>
+/* === r2cloudflare.js === */
+/* ██ R2 CLOUDFLARE — APPS, ARCHIVOS, COMPILAR */
+function renderizarTabs() {
+        const barra = document.getElementById('tabsProyecto');
+        const archivos = Object.keys(_proyectoArchivos);
+        if (archivos.length <= 1) { barra.style.display = 'none'; return; }
+        barra.style.display = 'flex';
+        barra.innerHTML = '';
+        archivos.forEach(nombre => {
+          const tab = document.createElement('div');
+          tab.className = 'tab-archivo' + (nombre === _archivoActivo ? ' activo' : '');
+          const icono = nombre.endsWith('.html') ? '🏠' : nombre.endsWith('.js') ? '⚙️' : nombre.endsWith('.css') ? '🎨' : '📄';
+          tab.textContent = icono + ' ' + nombre;
+          tab.onclick = () => cambiarTab(nombre);
+          barra.appendChild(tab);
+        });
+        // Botón + para crear nuevo archivo en el proyecto
+        const btnAdd = document.createElement('div');
+        btnAdd.className = 'tab-archivo';
+        btnAdd.textContent = '+';
+        btnAdd.title = 'Nuevo archivo en el proyecto';
+        btnAdd.style.cssText += ';color:#3b82f6;font-size:14px;font-weight:bold;padding:4px 10px;';
+        btnAdd.onclick = () => crearArchivoEnProyecto();
+        barra.appendChild(btnAdd);
+      }
+
+      function cambiarTab(nombre) {
+        if (nombre === _archivoActivo) return;
+        // Guardar contenido actual antes de cambiar
+        if (_archivoActivo) _proyectoArchivos[_archivoActivo] = editor.getValue();
+        _archivoActivo = nombre;
+        editor.setValue(_proyectoArchivos[nombre] || '');
+        // Modo CodeMirror según extensión
+        const ext = nombre.includes('.') ? '.' + nombre.split('.').pop().toLowerCase() : '';
+        const modeMap = { '.html':'htmlmixed', '.js':'javascript', '.css':'css', '.json':'application/json', '.md':'markdown' };
+        editor.setOption('mode', modeMap[ext] || 'text/plain');
+        renderizarTabs();
+      }
+
+      function crearArchivoEnProyecto() {
+        const nombre = prompt('📄 Nombre del nuevo archivo (ej: utils.js, estilos.css):');
+        if (!nombre || !nombre.trim()) return;
+        const nombreLimpio = nombre.trim();
+        if (_proyectoArchivos[nombreLimpio] !== undefined) {
+          mostrarEstado(`⚠️ Ya existe ${nombreLimpio} en el proyecto`);
+          return;
+        }
+        // Guardar el archivo activo antes de cambiar
+        if (_archivoActivo) _proyectoArchivos[_archivoActivo] = editor.getValue();
+        // Calcular la key R2 basada en el index.html del proyecto
+        const appNombre = _r2AppActiva || (_r2ArchivoKey ? _r2ArchivoKey.split('/')[1] : null);
+        _proyectoArchivos[nombreLimpio] = '';
+        _proyectoKeys[nombreLimpio]     = appNombre ? `app/${appNombre}/${nombreLimpio}` : null;
+        _archivoActivo = nombreLimpio;
+        editor.setValue('');
+        // Modo según extensión
+        const ext = nombreLimpio.includes('.') ? '.' + nombreLimpio.split('.').pop().toLowerCase() : '';
+        const modeMap = { '.html':'htmlmixed', '.js':'javascript', '.css':'css', '.json':'application/json', '.md':'markdown' };
+        editor.setOption('mode', modeMap[ext] || 'text/plain');
+        editor.focus();
+        renderizarTabs();
+        mostrarEstado(`📄 ${nombreLimpio} creado — edítalo y se subirá junto con el proyecto`);
+      }
+
+      function r2AppActivar(nombre, key = null) {
+        _r2AppNombre  = nombre;
+        _r2ArchivoKey = key || (nombre ? `app/${nombre}/index.html` : null);
+        const btn = document.getElementById('btnGithubSubir');
+        if (btn) {
+          btn.style.display = _r2ArchivoKey ? '' : 'none';
+          btn.title = _r2ArchivoKey ? `Subir a ${_r2ArchivoKey}` : '';
+        }
+      }
+
+      async function publicarEnR2() {
+        if (!_r2ArchivoKey) { mostrarEstado('⚠️ No hay archivo R2 activo'); return; }
+        if (!KV_BASE)       { mostrarEstado('⚠️ Falta URL del Worker');      return; }
+
+        // Sincronizar el archivo activo con lo que hay en el editor
+        if (_archivoActivo) _proyectoArchivos[_archivoActivo] = editor.getValue();
+
+        // Si hay proyecto con múltiples archivos → comparar y subir solo los modificados
+        const archivosProyecto = Object.keys(_proyectoArchivos);
+        if (archivosProyecto.length > 1) {
+          mostrarEstado('⏳ Comparando con versiones en R2…');
+          const aSubir  = []; // { nombre, key, contenido, esNuevo, difLineas, difChars }
+          for (const nombre of archivosProyecto) {
+            const key      = _proyectoKeys[nombre];
+            if (!key) continue;
+            let contenido  = _proyectoArchivos[nombre];
+            const ext      = nombre.split('.').pop().toLowerCase();
+            if (ext === 'html' && !contenido.includes(atob('PGJhc2Ug'))) {
+              const appNombre = key.split('/')[1];
+              contenido = contenido.replace(new RegExp(atob('KDwvdGl0bGU+KQ=='), 'i'), '$1\n\n    ' + TAG_BASE_APP + appNombre + TAG_BASE_FIN);
+            }
+            try {
+              const resp = await fetch(`${KV_BASE}/r2-download?key=${encodeURIComponent(key)}`);
+              if (resp.ok) {
+                const textoR2 = await resp.text();
+                if (textoR2.trim() === contenido.trim()) continue; // sin cambios
+                const difLineas = Math.abs(contenido.split('\n').length - textoR2.split('\n').length);
+                const difChars  = Math.abs(contenido.length - textoR2.length);
+                const fechaR2   = _r2Archivos.find(a => a.key === key)?.uploaded;
+                const fechaStr  = fechaR2 ? new Date(fechaR2).toLocaleString('es') : '?';
+                aSubir.push({ nombre, key, contenido, esNuevo: false, difLineas, difChars, fechaStr });
+              } else {
+                // No existe en R2 — es nuevo
+                aSubir.push({ nombre, key, contenido, esNuevo: true, difLineas: 0, difChars: contenido.length, fechaStr: '' });
+              }
+            } catch(e) {
+              aSubir.push({ nombre, key, contenido, esNuevo: false, difLineas: '?', difChars: '?', fechaStr: '?' });
+            }
+          }
+          if (!aSubir.length) { mostrarEstado('⚠️ Sin cambios — todos los archivos son idénticos a R2'); return; }
+          const resumen = aSubir.map(a =>
+            a.esNuevo
+              ? `  🆕 ${a.nombre} (nuevo)`
+              : `  ✏️ ${a.nombre} · ${a.difLineas} líneas · ${a.difChars} chars · R2: ${a.fechaStr}`
+          ).join('\n');
+          const confirmado = confirm(
+            `📦 ${aSubir.length} archivo${aSubir.length > 1 ? 's' : ''} con cambios:\n\n${resumen}\n\n¿Confirmas subir?`
+          );
+          if (!confirmado) { mostrarEstado('❌ Subida cancelada'); return; }
+          let ok = 0, errores = 0;
+          for (const a of aSubir) {
+            mostrarEstado(`⏳ Subiendo ${a.nombre}…`);
+            try {
+              const ext   = a.nombre.split('.').pop().toLowerCase();
+              const tipos = { html:'text/html', css:'text/css', js:'application/javascript', json:'application/json' };
+              const ct    = tipos[ext] || 'application/octet-stream';
+              const blob  = new Blob([a.contenido], { type: ct });
+              const resp  = await fetch(`${KV_BASE}/r2-upload`, {
+                method: 'POST', headers: { 'X-R2-Key': a.key }, body: blob
+              });
+              const data  = await resp.json();
+              if (!data.ok) throw new Error(data.error || 'Error');
+              ok++;
+            } catch(e) {
+              errores++;
+              mostrarEstado(`❌ Error en ${a.nombre}: ${e.message}`);
+            }
+          }
+          mostrarEstado(`✅ ${ok} archivo${ok > 1 ? 's' : ''} subido${ok > 1 ? 's' : ''}${errores ? ` · ${errores} error${errores > 1 ? 'es' : ''}` : ''}`);
+          return;
+        }
+
+        // Archivo único — flujo original con comparación
+        let contenido = editor.getValue();
+        if (!contenido.trim()) { mostrarEstado('⚠️ El editor está vacío'); return; }
+        // Descargar versión actual de R2 y comparar
+        mostrarEstado(`⏳ Comparando con versión en R2…`);
+        try {
+          const respActual = await fetch(`${KV_BASE}/r2-download?key=${encodeURIComponent(_r2ArchivoKey)}`);
+          if (respActual.ok) {
+            const textoR2 = await respActual.text();
+            if (textoR2.trim() === contenido.trim()) {
+              mostrarEstado('⚠️ Sin cambios — la versión en R2 es idéntica');
+              return;
+            }
+            // Contar diferencias
+            const lineasLocal = contenido.split('\n');
+            const lineasR2    = textoR2.split('\n');
+            const difLineas   = Math.abs(lineasLocal.length - lineasR2.length);
+            const difChars    = Math.abs(contenido.length - textoR2.length);
+            // Obtener fecha de R2 desde la lista de archivos
+            const fechaR2 = _r2Archivos.find(a => a.key === _r2ArchivoKey)?.uploaded;
+            const fechaStr = fechaR2 ? new Date(fechaR2).toLocaleString('es') : 'desconocida';
+            const confirmado  = confirm(
+              `⚠️ Diferencias detectadas con la versión en R2:\n\n` +
+              `🕒 Última actualización en R2: ${fechaStr}\n` +
+              `📝 Líneas: ${lineasLocal.length} (local) vs ${lineasR2.length} (R2) → ${difLineas} diferencia\n` +
+              `📦 Tamaño: ${contenido.length} (local) vs ${textoR2.length} (R2) → ${difChars} chars diferencia\n\n` +
+              `📁 ${_r2ArchivoKey}\n\n` +
+              `¿Confirmas subir la versión local?`
+            );
+            if (!confirmado) { mostrarEstado('❌ Subida cancelada'); return; }
+          } else {
+            // No existe en R2 todavía
+            const confirmado = confirm(`📁 ${_r2ArchivoKey}\n\nEl archivo no existe en R2 aún. ¿Subir?`);
+            if (!confirmado) { mostrarEstado('❌ Subida cancelada'); return; }
+          }
+        } catch(e) {
+          // Si falla la comparación continuar con confirmación simple
+          const confirmado = confirm(`No se pudo comparar con R2.\n\n📁 ${_r2ArchivoKey}\n\n¿Subir de todas formas?`);
+          if (!confirmado) { mostrarEstado('❌ Subida cancelada'); return; }
+        }
+        mostrarEstado(`⏳ Subiendo a ${_r2ArchivoKey}…`);
+        try {
+          const ext   = _r2ArchivoKey.split('.').pop().toLowerCase();
+          const tipos = { html:'text/html', css:'text/css', js:'application/javascript', json:'application/json' };
+          const ct    = tipos[ext] || 'application/octet-stream';
+
+          
+          if (ext === 'html' && !contenido.includes(atob('PGJhc2Ug'))) {
+            const appNombre = _r2ArchivoKey.split('/')[1];
+            contenido = contenido.replace(
+              new RegExp(atob('KDwvdGl0bGU+KQ=='), 'i'),
+              '$1\n\n    ' + TAG_BASE_APP + appNombre + TAG_BASE_FIN
+            );
+          }
+
+          const blob  = new Blob([contenido], { type: ct });
+          const resp  = await fetch(`${KV_BASE}/r2-upload`, {
+            method:  'POST',
+            headers: { 'X-R2-Key': _r2ArchivoKey },
+            body:    blob
+          });
+          const data = await resp.json();
+          if (!data.ok) throw new Error(data.error || 'Error desconocido');
+          mostrarEstado(`✅ Subido a ${_r2ArchivoKey}`);
+        } catch(e) {
+          mostrarEstado(`❌ Error: ${e.message}`);
+        }
+      }
+
+      /* ══════════════════════════════════════════════
+         PANEL R2 APPS
+      ══════════════════════════════════════════════ */
+
+      function abrirR2Panel() {
+        document.getElementById('modalR2').style.display = 'flex';
+        r2VolverAApps();
+      }
+      function cerrarR2Panel() {
+        document.getElementById('modalR2').style.display = 'none';
+      }
+
+      async function r2ListarApps() {
+        const lista = document.getElementById('r2Lista');
+        lista.innerHTML = '<div id="r2Estado" style="color:#8a909e;font-size:12px;text-align:center;padding:20px;">Cargando…</div>';
+        try {
+          const resp = await fetch(`${KV_BASE}/r2-list?prefix=app/`);
+          const data = await resp.json();
+          // Extraer nombres únicos de apps (app/{nombre}/...)
+          const nombres = [...new Set(
+            (data.objetos || [])
+              .map(o => o.key.split('/')[1])
+              .filter(Boolean)
+          )];
+          _r2Apps = nombres;
+          r2RenderApps(nombres);
+        } catch(e) {
+          lista.innerHTML = `<div style="color:red;font-size:12px;padding:20px;">Error: ${e.message}</div>`;
+        }
+      }
+
+      function r2RenderApps(apps) {
+        const lista = document.getElementById('r2Lista');
+        if (!apps.length) {
+          lista.innerHTML = '<div style="color:#8a909e;font-size:12px;text-align:center;padding:20px;">Sin apps — pulsa ➕ para crear una</div>';
+          return;
+        }
+        lista.innerHTML = '';
+        apps.forEach(nombre => {
+          const el = document.createElement('div');
+          el.className = 'github-item';
+          const url     = `${KV_BASE}/app/${nombre}`;
+          const iconUrl = `${KV_BASE}/app/${nombre}/icono.jpg`;
+          el.innerHTML = `<span class="icono">
+                            <img src="${iconUrl}" alt=""
+                                 style="width:24px;height:24px;border-radius:6px;object-fit:cover;vertical-align:middle;display:none;"
+                                 onload="this.style.display='inline';this.nextElementSibling.style.display='none';"
+                                 onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
+                            <img src="cloudflarelogo.jpg"
+                                 style="width:24px;height:24px;border-radius:6px;object-fit:cover;vertical-align:middle;">
+                          </span>
+                          <span class="nombre">${nombre}</span>
+                          <span class="meta">app/${nombre}</span>
+                          <button type="button" title="Copiar link: ${url}"
+                            style="flex-shrink:0;background:none;border:none;color:#3b82f6;
+                                   font-size:14px;cursor:pointer;padding:2px 6px;border-radius:4px;"
+                            data-link="${nombre}">🔗</button>
+                          <button type="button" title="Eliminar app/${nombre}"
+                            style="flex-shrink:0;background:none;border:none;color:#e74c3c;
+                                   font-size:14px;cursor:pointer;padding:2px 6px;border-radius:4px;"
+                            data-app="${nombre}">🗑️</button>`;
+          el.querySelector('[data-link]').onclick = (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(url).then(() => {
+              mostrarEstado(`🔗 Link copiado: ${url}`);
+            }).catch(() => mostrarEstado('❌ No se pudo copiar'));
+          };
+          el.querySelector('[data-app]').onclick = (e) => {
+            e.stopPropagation();
+            r2EliminarApp(nombre);
+          };
+          el.onclick = () => r2AbrirApp(nombre);
+          lista.appendChild(el);
+        });
+      }
+
+      async function r2AbrirApp(nombre) {
+        _r2Vista     = 'archivos';
+        _r2AppActiva = nombre;
+        document.getElementById('r2Titulo').innerHTML =
+          `<img src="cloudflarelogo.jpg"
+                style="width:18px;height:18px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-right:6px;"
+                onerror="this.style.display='none'">${nombre}`;
+        document.getElementById('r2BtnVolver').style.display        = '';
+        document.getElementById('r2BtnSubirArchivo').style.display  = '';
+        document.getElementById('r2BtnNuevaApp').style.display      = 'none';
+        document.getElementById('r2Filtro').value = '';
+        const lista = document.getElementById('r2Lista');
+        lista.innerHTML = '<div style="color:#8a909e;font-size:12px;text-align:center;padding:20px;">Cargando archivos…</div>';
+        try {
+          const resp = await fetch(`${KV_BASE}/r2-list?prefix=app/${nombre}/`);
+          const data = await resp.json();
+          _r2Archivos = (data.objetos || []).map(o => ({
+            key:      o.key,
+            nombre:   o.key.replace(`app/${nombre}/`, ''),
+            size:     o.size,
+            uploaded: o.uploaded
+          }));
+          r2RenderArchivos(_r2Archivos, nombre);
+        } catch(e) {
+          lista.innerHTML = `<div style="color:red;font-size:12px;padding:20px;">Error: ${e.message}</div>`;
+        }
+        // Activar publicar con este nombre
+        r2AppActivar(nombre);
+      }
+
+
+      function r2RenderArchivos(archivos, appNombre) {
+        const lista = document.getElementById('r2Lista');
+        if (!archivos.length) {
+          lista.innerHTML = '<div style="color:#8a909e;font-size:12px;text-align:center;padding:20px;">Carpeta vacía</div>';
+          return;
+        }
+        lista.innerHTML = '';
+
+        // Filtrar los que pertenecen a la carpeta actual
+        const prefix = _r2CarpetaActual ? _r2CarpetaActual + '/' : '';
+        const enCarpeta = archivos.filter(a => a.nombre.startsWith(prefix));
+
+        // Separar subcarpetas vs archivos directos en este nivel
+        const subcarpetas = new Set();
+        const archivosDirect = [];
+        enCarpeta.forEach(a => {
+          const relativo = a.nombre.slice(prefix.length);
+          const slash = relativo.indexOf('/');
+          if (slash !== -1) {
+            subcarpetas.add(relativo.slice(0, slash));
+          } else {
+            archivosDirect.push(a);
+          }
+        });
+
+        // Botón "subir" si estamos dentro de una subcarpeta
+        if (_r2CarpetaActual) {
+          const el = document.createElement('div');
+          el.className = 'github-item';
+          el.style.cursor = 'pointer';
+          el.innerHTML = `<span class="icono">⬆️</span>
+                          <span class="nombre">.. (subir)</span>`;
+          el.onclick = () => {
+            const partes = _r2CarpetaActual.split('/');
+            partes.pop();
+            _r2CarpetaActual = partes.join('/');
+            r2RenderArchivos(archivos, appNombre);
+          };
+          lista.appendChild(el);
+        }
+
+        // Render subcarpetas
+        [...subcarpetas].sort().forEach(carpeta => {
+          const el = document.createElement('div');
+          el.className = 'github-item';
+          el.style.cursor = 'pointer';
+          el.innerHTML = `<span class="icono">📁</span>
+                          <span class="nombre">${carpeta}/</span>`;
+          el.onclick = () => {
+            _r2CarpetaActual = prefix + carpeta;
+            r2RenderArchivos(archivos, appNombre);
+          };
+          lista.appendChild(el);
+        });
+
+        // Render archivos directos
+        archivosDirect.forEach(a => {
+          const nombreCorto = a.nombre.slice(prefix.length);
+          const icono = nombreCorto === 'index.html' ? '🏠' : nombreCorto === 'main.html' ? '🌸' :
+                        /\.(png|jpg|jpeg|webp|svg|ico)$/i.test(nombreCorto) ? '🖼️' :
+                        /\.js$/i.test(nombreCorto) ? '⚙️' :
+                        /\.css$/i.test(nombreCorto) ? '🎨' : '📄';
+          const kb    = (a.size / 1024).toFixed(1);
+          const fecha = a.uploaded ? new Date(a.uploaded).toLocaleString('es', {
+                          day:'2-digit', month:'2-digit', year:'2-digit',
+                          hour:'2-digit', minute:'2-digit'
+                        }) : '';
+          const el = document.createElement('div');
+          el.className = 'github-item';
+          el.innerHTML = `<span class="icono">${icono}</span>
+                          <span class="nombre">${nombreCorto}<br>
+                            <span style="font-size:10px;color:#8a909e;">${fecha}</span>
+                          </span>
+                          <span class="meta">${kb} KB</span>
+                          <button type="button" title="Eliminar ${nombreCorto}"
+                            style="flex-shrink:0;background:none;border:none;color:#e74c3c;
+                                   font-size:14px;cursor:pointer;padding:2px 6px;border-radius:4px;"
+                            data-key="${a.key}">🗑️</button>`;
+          el.querySelector('[data-key]').onclick = (e) => {
+            e.stopPropagation();
+            r2EliminarArchivo(a.key, nombreCorto, appNombre);
+          };
+          if (/\.(html|js|css|json)$/i.test(nombreCorto)) {
+            el.onclick = () => r2CargarArchivo(a.key, nombreCorto, appNombre);
+          }
+          lista.appendChild(el);
+        });
+      }
+
+      function r2SubirArchivo() {
+        if (!_r2AppActiva) { mostrarEstado('⚠️ Abre una app primero'); return; }
+        document.getElementById('r2ArchivoInput').click();
+      }
+
+      async function r2ProcesarArchivos(files) {
+        if (!files || !files.length || !_r2AppActiva) return;
+        const total = files.length;
+
+        // Confirmación con lista de archivos antes de subir
+        const subpath  = _r2CarpetaActual ? `${_r2CarpetaActual}/` : '';
+        const lista    = Array.from(files).map(f => `  📄 app/${_r2AppActiva}/${subpath}${f.name}`).join('\n');
+        const confirmado = confirm(
+          `⬆️ Subir ${total} archivo${total !== 1 ? 's' : ''} a R2:\n\n${lista}\n\n¿Confirmas?`
+        );
+        if (!confirmado) { mostrarEstado('❌ Subida cancelada'); return; }
+
+        let subidos = 0;
+        for (const file of files) {
+          const subpath = _r2CarpetaActual ? `${_r2CarpetaActual}/` : '';
+const key  = `app/${_r2AppActiva}/${subpath}${file.name}`;
+          const ext  = file.name.split('.').pop().toLowerCase();
+          const tipos = { html:'text/html', css:'text/css', js:'application/javascript',
+                          png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg',
+                          svg:'image/svg+xml', webp:'image/webp', json:'application/json',
+                          ico:'image/x-icon' };
+          const ct   = tipos[ext] || file.type || 'application/octet-stream';
+          mostrarEstado(`⏳ Subiendo ${file.name} (${subidos+1}/${total})…`);
+          try {
+            const tipado = file.slice(0, file.size, ct);
+            await fetch(`${KV_BASE}/r2-upload`, {
+              method:  'POST',
+              headers: { 'X-R2-Key': key },
+              body:    tipado
+            });
+            subidos++;
+          } catch(e) {
+            mostrarEstado(`❌ Error subiendo ${file.name}: ${e.message}`);
+          }
+        }
+        mostrarEstado(`✅ ${subidos}/${total} archivos subidos a app/${_r2AppActiva}`);
+        document.getElementById('r2ArchivoInput').value = '';
+        r2AbrirApp(_r2AppActiva);  // refrescar lista
+      }
+
+      async function r2EliminarApp(nombre) {
+        if (!confirm(`¿Eliminar app/${nombre} y todos sus archivos?`)) return;
+        mostrarEstado(`⏳ Eliminando app/${nombre}…`);
+        try {
+          const resp = await fetch(`${KV_BASE}/r2-list?prefix=app/${nombre}/`);
+          const data = await resp.json();
+          const archivos = data.objetos || [];
+          for (const a of archivos) {
+            await fetch(`${KV_BASE}/r2-delete?key=${encodeURIComponent(a.key)}`, { method: 'POST' });
+          }
+          mostrarEstado(`✅ app/${nombre} eliminada (${archivos.length} archivos)`);
+          r2VolverAApps();
+        } catch(e) {
+          mostrarEstado(`❌ Error: ${e.message}`);
+        }
+      }
+
+      async function r2EliminarArchivo(key, nombre, appNombre) {
+        if (!confirm(`¿Eliminar ${nombre}?`)) return;
+        mostrarEstado(`⏳ Eliminando ${nombre}…`);
+        try {
+          await fetch(`${KV_BASE}/r2-delete?key=${encodeURIComponent(key)}`, { method: 'POST' });
+          mostrarEstado(`✅ ${nombre} eliminado`);
+          r2AbrirApp(appNombre);
+        } catch(e) {
+          mostrarEstado(`❌ Error: ${e.message}`);
+        }
+      }
+
+      async function r2CargarArchivo(key, nombre, appNombre) {
+        try {
+          mostrarEstado(`⏳ Cargando ${nombre}…`);
+          const resp = await fetch(`${KV_BASE}/r2-download?key=${encodeURIComponent(key)}`);
+          const text = await resp.text();
+          editor.setValue(text);
+
+          // Guardar en proyecto
+          _archivoActivo = nombre;
+          _proyectoArchivos[nombre] = text;
+          _proyectoKeys[nombre]     = key;
+
+          // Nombre del proyecto: buscar <title> si es HTML, si no usar nombre del archivo
+          const ext = nombre.includes('.') ? '.' + nombre.split('.').pop().toLowerCase() : '';
+
+          // Solo main.html carga automáticamente los .js y .css de la carpeta
+          if (nombre === 'main.html') {
+            _proyectoArchivos = { [nombre]: text };
+            _proyectoKeys     = { [nombre]: key };
+            _proyectoAppOrigen = appNombre;
+            const archivosEnCarpeta = _r2Archivos.filter(a => a.nombre.endsWith('.js') || a.nombre.endsWith('.css'));
+            for (const js of archivosEnCarpeta) {
+              mostrarEstado(`⏳ Cargando ${js.nombre}…`);
+              try {
+                const r = await fetch(`${KV_BASE}/r2-download?key=${encodeURIComponent(js.key)}`);
+                _proyectoArchivos[js.nombre] = await r.text();
+                _proyectoKeys[js.nombre]     = js.key;
+              } catch(e) { /* continuar con los demás */ }
+            }
+            const total = Object.keys(_proyectoArchivos).length;
+            mostrarEstado(`✅ Proyecto cargado — ${total} archivo${total > 1 ? 's' : ''}`);
+            renderizarTabs();
+          }
+          if (ext === '.html') {
+            const match = text.match(new RegExp(atob('PHRpdGxlW14+XSo+KFtePF0rKTwvdGl0bGU+'), 'i'));
+            document.getElementById('NombreProyecto').value = match
+              ? match[1].trim()
+              : nombre.replace(/\.[^/.]+$/, '');
+          } else {
+            document.getElementById('NombreProyecto').value = nombre.replace(/\.[^/.]+$/, '');
+          }
+
+          // Modo CodeMirror según extensión
+          const modeMap = { '.html':'htmlmixed', '.js':'javascript', '.css':'css',
+                            '.json':'application/json', '.md':'markdown' };
+          editor.setOption('mode', modeMap[ext] || 'text/plain');
+
+          // Sincronizar selector de extensión
+          const extSel = document.getElementById('extSelector');
+          if (extSel) {
+            const existe = Array.from(extSel.options).some(o => o.value === ext);
+            if (existe) extSel.value = ext;
+          }
+
+          _githubArchivoOrigen = null;
+          r2AppActivar(appNombre, key);
+          cerrarR2Panel();
+          mostrarEstado(`✅ ${nombre} cargado desde R2`);
+        } catch(e) {
+          mostrarEstado(`❌ Error: ${e.message}`);
+        }
+      }
+
+      function r2VolverAApps() {
+        _r2Vista     = 'apps';
+        _r2AppActiva = null;
+        document.getElementById('r2Titulo').innerHTML =
+          `<img src="cloudflarelogo.jpg"
+                style="width:18px;height:18px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-right:6px;"
+                onerror="this.style.display='none'">R2 — Apps`;
+        document.getElementById('r2BtnVolver').style.display       = 'none';
+        document.getElementById('r2BtnSubirArchivo').style.display = 'none';
+        document.getElementById('r2BtnNuevaApp').style.display     = '';
+        document.getElementById('r2Filtro').value = '';
+        r2ListarApps();
+      }
+
+      function r2Filtrar(texto) {
+        const q = texto.toLowerCase();
+        if (_r2Vista === 'apps') {
+          r2RenderApps(!q ? _r2Apps : _r2Apps.filter(n => n.toLowerCase().includes(q)));
+        } else {
+          r2RenderArchivos(!q ? _r2Archivos : _r2Archivos.filter(a => a.nombre.toLowerCase().includes(q)), _r2AppActiva);
+        }
+      }
+
+      async function r2CrearApp() {
+        const nombre = prompt('Nombre de la nueva app (sin espacios):');
+        if (!nombre) return;
+        const slug = nombre.trim().toLowerCase().replace(/\s+/g, '-');
+        mostrarEstado(`⏳ Creando app/${slug}/…`);
+        try {
+          // Crear index.html vacío para que exista la carpeta
+          const blob = new Blob([TAG_DOCTYPE_MINI + slug + TAG_DOCTYPE_FIN],
+                                { type: 'text/html' });
+          const resp = await fetch(`${KV_BASE}/r2-upload`, {
+            method: 'POST',
+            headers: { 'X-R2-Key': `app/${slug}/index.html` },
+            body: blob
+          });
+          const data = await resp.json();
+          if (!data.ok) throw new Error(data.error);
+          mostrarEstado(`✅ app/${slug} creada`);
+          r2VolverAApps();
+        } catch(e) {
+          mostrarEstado(`❌ Error: ${e.message}`);
+        }
+      }
+
+      function r2ImportarZip() {
+        document.getElementById('r2ZipInput').click();
+      }
+
+      async function r2DescargarBackup() {
+        if (!window.JSZip) {
+          await new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+          });
+        }
+        // Si hay app activa → backup solo de esa app, si no → backup completo
+        const prefix    = _r2AppActiva ? `app/${_r2AppActiva}/` : `app/`;
+        const nombreZip = _r2AppActiva ? `backup-${_r2AppActiva}` : `backup-app-completo`;
+        const fecha     = new Date().toISOString().slice(0,10);
+        mostrarEstado(`⏳ Preparando backup de ${prefix}…`);
+        try {
+          const respLista = await fetch(`${KV_BASE}/r2-list?prefix=${encodeURIComponent(prefix)}`);
+          const dataLista = await respLista.json();
+          const archivos  = dataLista.objetos || [];
+          if (!archivos.length) { mostrarEstado('⚠️ No hay archivos para descargar'); return; }
+          const zip = new JSZip();
+          let descargados = 0;
+          for (const a of archivos) {
+            const resp = await fetch(`${KV_BASE}/r2-download?key=${encodeURIComponent(a.key)}`);
+            const blob = await resp.blob();
+            zip.file(a.key, blob);
+            descargados++;
+            mostrarEstado(`⏳ Backup ${descargados}/${archivos.length}: ${a.key}`);
+          }
+          const contenido = await zip.generateAsync({ type: 'blob' });
+          const url  = URL.createObjectURL(contenido);
+          const link = document.createElement('a');
+          link.href     = url;
+          link.download = `${nombreZip}-${fecha}.zip`;
+          link.click();
+          URL.revokeObjectURL(url);
+          mostrarEstado(`✅ ${nombreZip}-${fecha}.zip descargado`);
+        } catch(e) {
+          mostrarEstado(`❌ Error backup: ${e.message}`);
+        }
+      }
+
+      async function r2ProcesarZip(file) {
+        if (!file) return;
+        mostrarEstado(`⏳ Procesando ${file.name}…`);
+        try {
+          // Usar JSZip vía CDN
+          if (!window.JSZip) {
+            await new Promise((res, rej) => {
+              const s = document.createElement('script');
+              s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+              s.onload = res; s.onerror = rej;
+              document.head.appendChild(s);
+            });
+          }
+          const zip      = await JSZip.loadAsync(file);
+          const archivos = Object.keys(zip.files).filter(n => !zip.files[n].dir);
+
+          // Mostrar confirmación con lista de archivos antes de subir
+          const lista = archivos.map(n => `  📄 ${n}`).join('\n');
+          const confirmado = confirm(
+            `📦 ZIP: ${file.name}\n\n` +
+            `${archivos.length} archivo${archivos.length !== 1 ? 's' : ''} a subir:\n\n` +
+            `${lista}\n\n` +
+            `¿Confirmas subir a R2?`
+          );
+          if (!confirmado) { mostrarEstado('❌ Importación cancelada'); return; }
+
+          let subidos = 0;
+          for (const nombre of archivos) {
+            const blob    = await zip.files[nombre].async('blob');
+            // Si el ZIP ya trae la ruta app/... respetarla, si no anteponer app/
+            const key = nombre.startsWith('app/') ? nombre : `app/${nombre}`;
+            const ext     = nombre.split('.').pop().toLowerCase();
+            const tipos   = { html:'text/html', css:'text/css', js:'application/javascript',
+                               png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg',
+                               svg:'image/svg+xml', webp:'image/webp', json:'application/json' };
+            const ct      = tipos[ext] || 'application/octet-stream';
+            const tipado  = blob.slice(0, blob.size, ct);
+            await fetch(`${KV_BASE}/r2-upload`, {
+              method: 'POST',
+              headers: { 'X-R2-Key': key },
+              body: tipado
+            });
+            subidos++;
+            mostrarEstado(`⏳ Subiendo ${subidos}/${archivos.length}: ${nombre}`);
+          }
+          mostrarEstado(`✅ ZIP importado — ${subidos} archivos subidos`);
+          r2VolverAApps();  // refrescar lista de apps
+        } catch(e) {
+          mostrarEstado(`❌ Error procesando ZIP: ${e.message}`);
+        } finally {
+          document.getElementById('r2ZipInput').value = '';
+        }
+      }
+
+      function subirCambios() {
+        if (_r2ArchivoKey)        { publicarEnR2();       return; }
+        if (_githubArchivoOrigen) { githubSubirCambios(); return; }
+        mostrarEstado('⚠️ Abre un archivo desde GitHub o R2 primero');
       }
 
       async function githubSubirCambios() {
@@ -2066,7 +2988,11 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       /* ============================================================
          GITHUB — BACKUP COMPLETO EN .ZIP (vía streaming /github-proxy)
       ============================================================ */
-      async function githubBackupCompleto() {
+</script>
+    <script>
+/* === editor.js === */
+/* ██ EDITOR — CODEMIRROR, TEMA, HERRAMIENTAS */
+async function githubBackupCompleto() {
         const btn = document.getElementById("githubBtnBackup");
         btn.disabled = true;
         mostrarEstado("⏳ Descargando backup de GitHub…");
@@ -2176,24 +3102,6 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       /* ============================================================
-         INICIALIZACIÓN DEL EDITOR
-      ============================================================ */
-      const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
-        mode:            "htmlmixed",
-        lineNumbers:     true,
-        matchBrackets:   true,
-        autoCloseBrackets: true,
-        autoCloseTags:   true,
-        highlightSelectionMatches: { showToken: /\w/, annotateScrollbar: true },
-        foldGutter:      true,
-        gutters:         ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
-        indentUnit:      2,
-        tabSize:         2,
-        smartIndent:     true,
-        styleActiveLine: true
-      });
-
-      /* ============================================================
          FUNCIONES DE EDICIÓN
       ============================================================ */
       function cambiarTamaño() {
@@ -2248,15 +3156,56 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       function cargarArchivo() {
         const fileInput = document.createElement("input");
         fileInput.type = "file";
-        fileInput.accept = ".html,.js,.css,.json,.md";
-        fileInput.onchange = () => {
+        fileInput.accept = ".html,.js,.css,.json,.md,.zip";
+        fileInput.onchange = async () => {
           const file = fileInput.files[0];
-          if (!file) return alert("Selecciona un archivo válido");
+          if (!file) return;
+          const ext = file.name.split(".").pop().toLowerCase();
+
+          // ZIP → cargar como proyecto múltiple
+          if (ext === 'zip') {
+            try {
+              const zip      = await JSZip.loadAsync(file);
+              const entradas = Object.values(zip.files).filter(f => !f.dir &&
+                /\.(html|js|css|json|md)$/i.test(f.name));
+              if (!entradas.length) { mostrarEstado('⚠️ ZIP sin archivos de texto reconocidos'); return; }
+
+              _proyectoArchivos = {};
+              _proyectoKeys     = {};
+              const appNombre   = file.name.replace(/\.zip$/i, '');
+
+              for (const entrada of entradas) {
+                const nombre  = entrada.name.split('/').pop(); // solo el nombre, sin subcarpetas
+                const texto   = await entrada.async('text');
+                _proyectoArchivos[nombre] = texto;
+                _proyectoKeys[nombre]     = null; // sin key R2 hasta que se publique
+              }
+
+              // Activar el index.html si existe, si no el primero
+              const primerNombre = _proyectoArchivos['main.html']
+                ? 'main.html'
+                : _proyectoArchivos['index.html']
+                ? 'index.html'
+                : Object.keys(_proyectoArchivos)[0];
+              _archivoActivo = primerNombre;
+              editor.setValue(_proyectoArchivos[primerNombre]);
+              const extPrimero = primerNombre.split('.').pop().toLowerCase();
+              const modeMap = { html:'htmlmixed', js:'javascript', css:'css', json:'application/json', md:'markdown' };
+              editor.setOption('mode', modeMap[extPrimero] || 'text/plain');
+              document.getElementById('NombreProyecto').value = appNombre;
+              renderizarTabs();
+              mostrarEstado(`📂 ZIP cargado — ${Object.keys(_proyectoArchivos).length} archivos`);
+            } catch(e) {
+              mostrarEstado(`❌ Error leyendo ZIP: ${e.message}`);
+            }
+            return;
+          }
+
+          // Archivo único → flujo original
           const reader = new FileReader();
           reader.onload = e => {
             editor.setValue(e.target.result);
             document.getElementById("NombreProyecto").value = file.name.replace(/\.[^/.]+$/, "");
-            const ext = file.name.split(".").pop().toLowerCase();
             const modeMap = { html:"htmlmixed", js:"javascript", css:"css", json:"application/json", md:"markdown" };
             editor.setOption("mode", modeMap[ext] || "text/plain");
             mostrarEstado("📂 " + file.name + " cargado");
@@ -2264,21 +3213,276 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           reader.readAsText(file);
         };
         fileInput.click();
+      }         
+
+      async function _compilarHTML(modoUnico = false) {
+        const archivos = (typeof _proyectoArchivos !== 'undefined') ? Object.keys(_proyectoArchivos) : [];
+        if (_archivoActivo) _proyectoArchivos[_archivoActivo] = editor.getValue();
+
+        // Buscar el HTML principal del proyecto
+       
+        const indexNombre = archivos.find(n => n === 'main.html') || archivos[0];
+        
+        let html = _proyectoArchivos[indexNombre] || '';
+
+        const abrirScript  = TAG_SCRIPT_ABRIR;
+        const cerrarScript = atob('PC9zY3JpcHQ+');
+
+        // ── 1. Inyectar CSS ─────
+        const cssRe = new RegExp(atob('PGxpbmtcc1tePl0qcmVsPVsiXCddc3R5bGVzaGVldFsiXCddW14+XSpocmVmPSIoW14iXStcLmNzcykiW14+XSo+fDxsaW5rXHNbXj5dKmhyZWY9IihbXiJdK1wuY3NzKSJbXj5dKnJlbD1bIlwnXXN0eWxlc2hlZXRbIlwnXVtePl0qPg=='), 'gi');
+        let cssMatch;
+        while ((cssMatch = cssRe.exec(html)) !== null) {
+          const nombre = (cssMatch[1] || cssMatch[2]).split('/').pop();
+          let css = _proyectoArchivos[nombre];
+          if (!css && KV_BASE && _r2AppActiva) {
+            try {
+              const key  = `app/${_r2AppActiva}/${nombre}`;
+              const resp = await fetch(`${KV_BASE}/r2-download?key=${encodeURIComponent(key)}&_t=${Date.now()}`);
+              if (resp.ok) { css = await resp.text(); _proyectoArchivos[nombre] = css; }
+            } catch(e) {}
+          }
+          if (css) {
+            html = html.slice(0, cssMatch.index) +
+                   TAG_STYLE_ABRIR + css + TAG_STYLE_CERRAR +
+                   html.slice(cssMatch.index + cssMatch[0].length);
+            cssRe.lastIndex = 0;
+          }
+        }
+
+        // ── 2. Inyectar JS ────
+        const jsRe = new RegExp(atob('PHNjcmlwdCBzcmM9IihbXiJdK1wuanMpIj48XC9zY3JpcHQ+'), 'gi');
+        let jsMatch;
+
+        if (modoUnico) {
+          // MODO ÚNICO — todos los JS van dentro del <script> principal del HTML
+          // Se remueven los <script src> y se inserta un solo bloque al final del <body>
+          const jsOrden = [];
+          while ((jsMatch = jsRe.exec(html)) !== null) {
+            const fname = jsMatch[1].split('/').pop();
+            const js    = _proyectoArchivos[fname];
+            if (js) {
+              jsOrden.push(`/* === ${fname} === */\n${js}`);
+              html = html.slice(0, jsMatch.index) + html.slice(jsMatch.index + jsMatch[0].length);
+              jsRe.lastIndex = 0;
+            }
+          }
+          if (jsOrden.length) {
+            const bloqueUnico = abrirScript + '\n' + jsOrden.join('\n\n') + '\n' + cerrarScript;
+           html = html.replace(new RegExp(atob('PC9ib2R5Pg=='), 'i'), bloqueUnico + '\n' + atob('PC9ib2R5Pg=='));
+          }
+
+        } else {
+          // MODO MÚLTIPLE — cada JS va en su propio <script> con comentario de identificación
+          while ((jsMatch = jsRe.exec(html)) !== null) {
+            const fname = jsMatch[1].split('/').pop();
+            const js    = _proyectoArchivos[fname];
+            if (js) {
+              const bloque = abrirScript + '\n/* === ' + fname + ' === */\n' + js + '\n' + cerrarScript;
+              html = html.slice(0, jsMatch.index) + bloque + html.slice(jsMatch.index + jsMatch[0].length);
+              jsRe.lastIndex = 0;
+            }
+          }
+        }
+
+        return html;
+      }
+      
+      
+      async function compilarYSubir() {
+       const appCompilacion = _proyectoAppOrigen || _r2AppActiva;
+  
+        if (!KV_BASE || !appCompilacion) { mostrarEstado('⚠️ Abre una app desde R2 primero'); return; }
+        const archivos = (typeof _proyectoArchivos !== 'undefined') ? Object.keys(_proyectoArchivos) : [];
+        if (archivos.length <= 1) { mostrarEstado('⚠️ Se necesita proyecto múltiple para compilar'); return; }
+
+        // Preguntar modo de compilación
+        const modoUnico = await new Promise(resolve => {
+          const overlay = document.createElement('div');
+          overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;display:flex;align-items:center;justify-content:center;';
+          
+          overlay.innerHTML = decodeURIComponent(escape(atob('CiAgICAgICAgICAgIDxkaXYgc3R5bGU9ImJhY2tncm91bmQ6IzFlMWUyZTtib3JkZXI6MXB4IHNvbGlkICMzZDNkNmU7Ym9yZGVyLXJhZGl1czoxNHB4O3BhZGRpbmc6MjRweDt3aWR0aDozMDBweDtmb250LWZhbWlseTonSmV0QnJhaW5zIE1vbm8nLG1vbm9zcGFjZTtjb2xvcjojY2RkNmY0OyI+CiAgICAgICAgICAgICAgPGRpdiBzdHlsZT0iZm9udC1zaXplOjE1cHg7Zm9udC13ZWlnaHQ6NjAwO21hcmdpbi1ib3R0b206MThweDsiPvCfl5zvuI8gTW9kbyBkZSBjb21waWxhY2nDs248L2Rpdj4KCiAgICAgICAgICAgICAgPGxhYmVsIHN0eWxlPSJkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6ZmxleC1zdGFydDtnYXA6MTBweDttYXJnaW4tYm90dG9tOjE0cHg7Y3Vyc29yOnBvaW50ZXI7Ij4KICAgICAgICAgICAgICAgIDxpbnB1dCB0eXBlPSJyYWRpbyIgbmFtZT0ibW9kb0NvbXBpbGEiIHZhbHVlPSJ1bmljbyIgY2hlY2tlZCBzdHlsZT0ibWFyZ2luLXRvcDozcHg7YWNjZW50LWNvbG9yOiM4OWI0ZmE7Ij4KICAgICAgICAgICAgICAgIDxzcGFuPgogICAgICAgICAgICAgICAgICA8c3Ryb25nIHN0eWxlPSJjb2xvcjojODliNGZhOyI+U2NyaXB0IMO6bmljbzwvc3Ryb25nPjxicj4KICAgICAgICAgICAgICAgICAgPHNtYWxsIHN0eWxlPSJjb2xvcjojNmM3MDg2OyI+VG9kbyBlbCBKUyBlbiB1biBzb2xvICZsdDtzY3JpcHQmZ3Q7IGFudGVzIGRlbCAmbHQ7L2JvZHkmZ3Q7PC9zbWFsbD4KICAgICAgICAgICAgICAgIDwvc3Bhbj4KICAgICAgICAgICAgICA8L2xhYmVsPgoKICAgICAgICAgICAgICA8bGFiZWwgc3R5bGU9ImRpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpmbGV4LXN0YXJ0O2dhcDoxMHB4O21hcmdpbi1ib3R0b206MjJweDtjdXJzb3I6cG9pbnRlcjsiPgogICAgICAgICAgICAgICAgPGlucHV0IHR5cGU9InJhZGlvIiBuYW1lPSJtb2RvQ29tcGlsYSIgdmFsdWU9Im11bHRpcGxlIiBzdHlsZT0ibWFyZ2luLXRvcDozcHg7YWNjZW50LWNvbG9yOiM4OWI0ZmE7Ij4KICAgICAgICAgICAgICAgIDxzcGFuPgogICAgICAgICAgICAgICAgICA8c3Ryb25nIHN0eWxlPSJjb2xvcjojYTZlM2ExOyI+U2NyaXB0cyBzZXBhcmFkb3M8L3N0cm9uZz48YnI+CiAgICAgICAgICAgICAgICAgIDxzbWFsbCBzdHlsZT0iY29sb3I6IzZjNzA4NjsiPkNhZGEgYXJjaGl2byBlbiBzdSBwcm9waW8gJmx0O3NjcmlwdCZndDsgaWRlbnRpZmljYWRvPC9zbWFsbD4KICAgICAgICAgICAgICAgIDwvc3Bhbj4KICAgICAgICAgICAgICA8L2xhYmVsPgoKICAgICAgICAgICAgICA8ZGl2IHN0eWxlPSJkaXNwbGF5OmZsZXg7Z2FwOjEwcHg7anVzdGlmeS1jb250ZW50OmZsZXgtZW5kOyI+CiAgICAgICAgICAgICAgICA8YnV0dG9uIGlkPSJfYnRuQ2FuY2VsYXJDb21waWxhIiBzdHlsZT0icGFkZGluZzo3cHggMTZweDtib3JkZXItcmFkaXVzOjhweDtib3JkZXI6MXB4IHNvbGlkICMzZDNkNmU7YmFja2dyb3VuZDpub25lO2NvbG9yOiM2YzcwODY7Y3Vyc29yOnBvaW50ZXI7Zm9udC1mYW1pbHk6aW5oZXJpdDsiPkNhbmNlbGFyPC9idXR0b24+CiAgICAgICAgICAgICAgICA8YnV0dG9uIGlkPSJfYnRuQ29tcGlsYXIiIHN0eWxlPSJwYWRkaW5nOjdweCAxNnB4O2JvcmRlci1yYWRpdXM6OHB4O2JvcmRlcjpub25lO2JhY2tncm91bmQ6Izg5YjRmYTtjb2xvcjojMWUxZTJlO2ZvbnQtd2VpZ2h0OjYwMDtjdXJzb3I6cG9pbnRlcjtmb250LWZhbWlseTppbmhlcml0OyI+8J+XnO+4jyBDb21waWxhcjwvYnV0dG9uPgogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICA8L2Rpdj4=')));
+          
+          document.body.appendChild(overlay);
+
+          overlay.querySelector('#_btnCompilar').onclick = () => {
+            const val = overlay.querySelector('input[name="modoCompila"]:checked').value;
+            document.body.removeChild(overlay);
+            resolve(val === 'unico');
+          };
+          overlay.querySelector('#_btnCancelarCompila').onclick = () => {
+            document.body.removeChild(overlay);
+            resolve(null);
+          };
+        });
+
+        if (modoUnico === null) { mostrarEstado('❌ Compilación cancelada'); return; }
+
+        let html = await _compilarHTML(modoUnico);
+
+        // Comparar con index.html actual en R2
+        const keyIndex = `app/${appCompilacion}/index.html`;
+        mostrarEstado('⏳ Comparando con index.html en R2…');
+        try {
+          const respActual = await fetch(`${KV_BASE}/r2-download?key=${encodeURIComponent(keyIndex)}`);
+          if (respActual.ok) {
+            const htmlActual = await respActual.text();
+            if (htmlActual.trim() === html.trim()) {
+              mostrarEstado('⚠️ index.html ya está actualizado — sin cambios');
+              return;
+            }
+            const difLineas = Math.abs(html.split('\n').length - htmlActual.split('\n').length);
+            const difChars  = Math.abs(html.length - htmlActual.length);
+            const confirmar = confirm(
+              `🗜️ Compilar y subir como index.html\n\n` +
+              `Diferencia: ${difLineas} líneas · ${difChars} chars\n\n` +
+              `¿Confirmas reemplazar index.html en R2?`
+            );
+            if (!confirmar) { mostrarEstado('❌ Compilación cancelada'); return; }
+          }
+        } catch(e) { /* si no existe index.html aún, continuar */ }
+
+        // Subir
+        // Asegurar base correcto para R2
+        const appNombreBase = appCompilacion;
+        if (html.includes(TAG_BASE_APP.slice(0, 6))) {
+          html = html.replace(new RegExp(atob('PGJhc2VcYltePl0qPg=='), 'gi'), TAG_BASE_APP + appNombreBase + TAG_BASE_FIN);
+        } else {
+          html = html.replace(new RegExp(atob('PGhlYWQ+'), 'i'), TAG_HEAD_ABRIR + '\n  ' + TAG_BASE_APP + appNombreBase + TAG_BASE_FIN);
+        }
+
+        // Subir
+        mostrarEstado('⏳ Subiendo index.html compilado…');
+        try {
+          const blob = new Blob([html], { type: 'text/html' });
+          const resp = await fetch(`${KV_BASE}/r2-upload`, {
+            method: 'POST', headers: { 'X-R2-Key': keyIndex }, body: blob
+          });
+          const data = await resp.json();
+          if (!data.ok) throw new Error(data.error || 'Error');
+          mostrarEstado('✅ index.html compilado y subido a R2');
+        } catch(e) {
+          mostrarEstado('❌ Error al subir: ' + e.message);
+        }
       }
 
-      function ejecutarArchivo() {
+      async function ejecutarArchivo() {
         try {
-          const blob = new Blob([editor.getValue()], { type: "text/html" });
-          const url  = URL.createObjectURL(blob);
-          const nv   = window.open(url, "_blank");
-          if (!nv) {
-            mostrarEstado("⚠️ El navegador bloqueó la ventana emergente");
-          } else {
-            nv.addEventListener("load", () => URL.revokeObjectURL(url), { once: true });
+          const archivos = (typeof _proyectoArchivos !== 'undefined')
+            ? Object.keys(_proyectoArchivos) : [];
+
+          // Si el archivo activo es main.html y hay proyecto múltiple
+          // → compilar, subir como run.html a R2 e invocar el link
+          if (_archivoActivo === 'main.html' && archivos.length > 1) {       
+            
+            const appEjecucion = _proyectoAppOrigen || _r2AppActiva;
+            if (!KV_BASE || !appEjecucion) { mostrarEstado('⚠️ Abre una app desde R2 primero'); return; }
+            mostrarEstado('⏳ Compilando run.html…');
+            try {           
+              let html = await _compilarHTML();
+
+              // Asegurar base correcto para que R2 resuelva los recursos
+              if (html.includes(TAG_BASE_APP.slice(0, 6))) {
+                html = html.replace(new RegExp(atob('PGJhc2VcYltePl0qPg=='), 'gi'), TAG_BASE_APP + appEjecucion + TAG_BASE_FIN);
+              } else {
+                html = html.replace(new RegExp(atob('PGhlYWQ+'), 'i'), TAG_HEAD_ABRIR + '\n  ' + TAG_BASE_APP + appEjecucion + TAG_BASE_FIN);
+              }
+              // Subir como run.html — versión ejecutable del index
+              const keyRun = `app/${appEjecucion}/run.html`;
+              
+              mostrarEstado('⏳ Subiendo run.html a R2…');
+              const blob = new Blob([html], { type: 'text/html' });
+              const resp = await fetch(`${KV_BASE}/r2-upload`, {
+                method: 'POST', headers: { 'X-R2-Key': keyRun }, body: blob
+              });
+              const data = await resp.json();
+              if (!data.ok) throw new Error(data.error || 'Error al subir');
+
+              // Invocar el link del Worker como enlace directo
+              const urlRun = `${KV_BASE}/app/${appEjecucion}/run.html`;
+              mostrarEstado('✅ run.html listo — abriendo…');
+              const a = document.createElement('a');
+              a.href   = urlRun;
+              a.target = '_blank';
+              a.rel    = 'noopener';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+
+            } catch(e) {
+              mostrarEstado('❌ Error: ' + e.message);
+            }
+            return;
           }
+
+          // Cualquier otro archivo → ejecutar directo desde el editor
+          const blob = new Blob([editor.getValue()], { type: 'text/html' });
+          const url  = URL.createObjectURL(blob);
+          const nv   = window.open(url, '_blank');
+          if (!nv) mostrarEstado('⚠️ El navegador bloqueó la ventana emergente');
+          else nv.addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
+
         } catch(e) {
-          mostrarEstado("❌ Error al ejecutar: " + e.message);
+          mostrarEstado('❌ Error al ejecutar: ' + e.message);
         }
+      }
+
+      function abrirPanelB64() {
+        document.getElementById('panelB64').style.display = 'flex';
+        document.getElementById('b64Input').value = '';
+        document.getElementById('b64Output').value = '';
+      }
+
+      function cerrarPanelB64() {
+        document.getElementById('panelB64').style.display = 'none';
+      }
+
+      function convertirAB64() {
+        const input  = document.getElementById('b64Input').value.trim();
+        const output = document.getElementById('b64Output').value.trim();
+
+        // Si el output tiene atob(...) y el input está vacío → revertir desde output
+        const fuenteRevertir = !input && output ? output : input;
+        const texto = fuenteRevertir;
+        if (!texto) { mostrarEstado('⚠️ Nada que convertir'); return; }
+
+        const esRevertir = output && texto === output;
+
+        if (esRevertir) {
+          // Revertir: extraer el b64 del atob('...') y decodificar
+          const m = texto.match(/atob\('([^']+)'\)/);
+          if (m) {
+            try {
+              const decoded = decodeURIComponent(escape(atob(m[1])));
+              document.getElementById('b64Input').value  = decoded;
+              document.getElementById('b64Output').value = '';
+              mostrarEstado('✅ Revertido a texto');
+              return;
+            } catch(e) { mostrarEstado('❌ Error al revertir'); return; }
+          }
+        }
+
+        // Detectar si el input ya es un atob('...') — revertir directo
+        const mInput = texto.match(/^atob\('([^']+)'\)$/);
+        if (mInput) {
+          try {
+            const decoded = decodeURIComponent(escape(atob(mInput[1])));
+            document.getElementById('b64Input').value  = decoded;
+            document.getElementById('b64Output').value = '';
+            mostrarEstado('✅ Revertido a texto');
+            return;
+          } catch(e) { mostrarEstado('❌ Error al revertir'); return; }
+        }
+
+        // Convertir texto → b64
+        const b64 = btoa(unescape(encodeURIComponent(texto)));
+        document.getElementById('b64Output').value = `atob('${b64}')`;
+        mostrarEstado('✅ Convertido a b64');
+      }
+
+      function copiarB64() {
+        const val = document.getElementById('b64Output').value;
+        if (!val) return;
+        navigator.clipboard.writeText(val).then(() => mostrarEstado('📋 Copiado'));
       }
 
       function traslape() {
@@ -2412,15 +3616,58 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       function descargarArchivo() {
+        const archivos = Object.keys(_proyectoArchivos);
+        if (archivos.length > 1) {
+          // Proyecto múltiple → mostrar panel de radios
+          if (_archivoActivo) _proyectoArchivos[_archivoActivo] = editor.getValue();
+          document.getElementById('panelDescarga').style.display = 'flex';
+          return;
+        }
+        // Archivo único → descarga directa
         const blob = new Blob([editor.getValue()], { type: "text/plain" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href     = URL.createObjectURL(blob);
         a.download = nombreDelHtml();
         a.click();
         URL.revokeObjectURL(a.href);
       }
 
-      function setEditorNormal() { editor.setSize("100%", "90%"); }
+      function cerrarPanelDescarga() {
+        document.getElementById('panelDescarga').style.display = 'none';
+      }
+
+      async function confirmarDescarga() {
+        const modo = document.querySelector('input[name="modoDescarga"]:checked').value;
+        cerrarPanelDescarga();
+
+        if (modo === 'zip') {
+          const zip   = new JSZip();
+          for (const nombre of Object.keys(_proyectoArchivos)) {
+            zip.file(nombre, _proyectoArchivos[nombre] || '');
+          }
+          const appNombre = _r2AppActiva || 'proyecto';
+          const fecha     = new Date().toISOString().slice(0, 10);
+          const blob      = await zip.generateAsync({ type: 'blob' });
+          const a         = document.createElement('a');
+          a.href          = URL.createObjectURL(blob);
+          a.download      = `${appNombre}-${fecha}.zip`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+        } else {
+          // Solo el archivo activo
+          const blob = new Blob([_proyectoArchivos[_archivoActivo] || editor.getValue()], { type: 'text/plain' });
+          const a    = document.createElement('a');
+          a.href     = URL.createObjectURL(blob);
+          a.download = _archivoActivo || nombreDelHtml();
+          a.click();
+          URL.revokeObjectURL(a.href);
+        }
+      }
+</script>
+    <script>
+/* === backups.js === */
+/* ██ BACKUPS — INDEXEDDB, DIFF, AUTOGUARDADO */
+function setEditorNormal() { editor.setSize("100%", "90%"); }
 
       /* ============================================================
          BACKUPS — window.storage (DB permanente)
@@ -2428,22 +3675,26 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
          Ej: bk:EditorVisorIDE:0 , bk:swIDE52:3
       ============================================================ */
 
-      const BK_PREFIX = 'bk:';
-      let _bkProyectoActivo = null; // proyecto abierto en vista backups
 
       /* ── Detectar nombre de proyecto desde el contenido del editor ── */
       function bkDetectarProyecto() {
+        const appNombre = (document.getElementById("NombreProyecto").value.trim() || "sin-nombre")
+          .trim();
+        // Si hay proyecto múltiple, agregar el archivo activo como subcarpeta
+        if (_archivoActivo && Object.keys(_proyectoArchivos).length > 1) {
+          return `${appNombre}/${_archivoActivo}`;
+        }
+        // Archivo único — intentar leer <title> si es HTML
         const src = editor.getValue();
-        const m   = src.match(/<title[^>]*>([^<]+)<\/title>/i);
+        const m   = src.match(new RegExp(atob('PHRpdGxlW14+XSo+KFtePF0rKTwvdGl0bGU+'), 'i'));
         if (m && m[1].trim()) return m[1].trim();
-        return (document.getElementById("NombreProyecto").value.trim()) || "sin-nombre";
+        return appNombre;
       }
 
       /* ── Clave de storage ── */
       function bkClave(proyecto, idx) { return `${BK_PREFIX}${proyecto}:${idx}`; }
 
       /* ── IndexedDB para backups ── */
-      let _ideDB = null;
 
       function ideAbrirDB() {
         return new Promise((resolve, reject) => {
@@ -2460,45 +3711,6 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         });
       }
 
-      const bkStorage = {
-        async set(key, value) {
-          const db = await ideAbrirDB();
-          return new Promise((resolve, reject) => {
-            const tx = db.transaction('backups', 'readwrite');
-            tx.objectStore('backups').put({ key, value });
-            tx.oncomplete = () => resolve();
-            tx.onerror    = e => reject(e.target.error);
-          });
-        },
-        async get(key) {
-          const db = await ideAbrirDB();
-          return new Promise((resolve, reject) => {
-            const req = db.transaction('backups', 'readonly').objectStore('backups').get(key);
-            req.onsuccess = e => resolve(e.target.result || null);
-            req.onerror   = e => reject(e.target.error);
-          });
-        },
-        async delete(key) {
-          const db = await ideAbrirDB();
-          return new Promise((resolve, reject) => {
-            const tx = db.transaction('backups', 'readwrite');
-            tx.objectStore('backups').delete(key);
-            tx.oncomplete = () => resolve();
-            tx.onerror    = e => reject(e.target.error);
-          });
-        },
-        async list(prefix) {
-          const db = await ideAbrirDB();
-          return new Promise((resolve, reject) => {
-            const req = db.transaction('backups', 'readonly').objectStore('backups').getAllKeys();
-            req.onsuccess = e => {
-              const keys = e.target.result.filter(k => k.startsWith(prefix));
-              resolve({ keys });
-            };
-            req.onerror = e => reject(e.target.error);
-          });
-        }
-      };
 
       /* ── Leer todos los proyectos (agrupa claves por proyecto) ── */
       async function bkLeerProyectos() {
@@ -2756,18 +3968,23 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       /* ── Stubs de compatibilidad (el autoguardado sigue llamando guardarBackup) ── */
       function limpiarBackups()  { /* reemplazado por bkLimpiarProyecto */ }
-      function setListBackup()   { /* ya no necesario — DB permanente */   }
-      function reiniciarSelector() { /* sin selector */                    }
-      function agregarOpcionSelector() { /* sin selector — stub */ }
-      let iBackupGuardados = 0; // mantenido por compatibilidad, ya no controla índices
 
+      async function bkLimpiarTodo() {
+        if (!confirm('🗑️ ¿Eliminar TODOS los backups de todos los proyectos?\nEsta acción no se puede deshacer.')) return;
+        try {
+          const result = await bkStorage.list(BK_PREFIX);
+          const keys   = (result?.keys || []).filter(k => k.startsWith(BK_PREFIX));
+          await Promise.all(keys.map(k => bkStorage.delete(k).catch(() => {})));
+          mostrarEstado(`🗑️ ${keys.length} backup${keys.length !== 1 ? 's' : ''} eliminado${keys.length !== 1 ? 's' : ''}`);
+          abrirPanelBackups(); // refrescar el panel
+        } catch(e) {
+          mostrarEstado('❌ Error al limpiar: ' + e.message);
+        }
+      }
+     
       /* ============================================================
          DIFF VISUAL
       ============================================================ */
-      let _backupParaDiff      = null; // contenido pendiente de aplicar
-      let _backupNombreLimpio  = null; // nombre para actualizar NombreProyecto
-
-      function mostrarDiffBackup() { /* sustituida por bkVerDiff */ }
 
       function aplicarBackupDesideDiff() {
         if (!_backupParaDiff) return;
@@ -2879,8 +4096,6 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       /* ============================================================
          AUTOGUARDADO
       ============================================================ */
-      let autoguardado   = true;
-      let ultimoContenido = "";
 
       setInterval(() => {
         if (!autoguardado) return;
@@ -2903,8 +4118,6 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
          AUTOCOMPLETE Y HIGHLIGHT
       ============================================================ */
       
-      let highlightTimeout;
-      let aplicandoMarks = false;
 
       editor.on("cursorActivity", function(cm) {
         if (cm.somethingSelected()) return;
@@ -2939,11 +4152,11 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       /* ============================================================
          MENÚ REEMPLAZAR — NAVEGACIÓN DE OCURRENCIAS
       ============================================================ */
-      let _ocurrencias   = [];   // Array de índices (posición en string) donde se encontró
-      let _ocurrenciaIdx = 0;    // Índice actual
-      let _buscarTexto   = "";   // Texto buscado actualmente
-
-      function abrirMenuReemplazar() {
+</script>
+    <script>
+/* === editor-search.js === */
+/* ██ EDITOR SEARCH — BUSCAR Y REEMPLAZAR */
+function abrirMenuReemplazar() {
         document.getElementById("MenuFlotante").style.display = "none";
         const m = document.getElementById("menuReemplazar");
         m.style.display = "flex";
@@ -2970,24 +4183,63 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       function buscarCodigo() {
-        const buscar  = document.getElementById("txtBuscar").value;
-        const estado  = document.getElementById("estadoBusqueda");
+        const buscar   = document.getElementById("txtBuscar").value;
+        const estado   = document.getElementById("estadoBusqueda");
         const secNuevo = document.getElementById("seccionNuevo");
-        const navOc   = document.getElementById("navOcurrencias");
+        const navOc    = document.getElementById("navOcurrencias");
+        const enTodos  = document.getElementById("chkTodosArchivos").checked;
 
         if (!buscar.trim()) {
-          estado.style.display  = "block";
-          estado.className      = "no-encontrado";
-          estado.textContent    = "⚠️ El campo de búsqueda está vacío.";
+          estado.style.display   = "block";
+          estado.className       = "no-encontrado";
+          estado.textContent     = "⚠️ El campo de búsqueda está vacío.";
           secNuevo.style.display = "none";
           navOc.style.display    = "none";
           return;
         }
 
-        const contenido = editor.getValue();
-        _buscarTexto    = buscar;
-        _ocurrencias    = [];
+        _buscarTexto = buscar;
+        _ocurrencias = [];
 
+        if (enTodos && Object.keys(_proyectoArchivos).length > 1) {
+          // Buscar en todos los archivos del proyecto
+          // Sincronizar archivo activo
+          if (_archivoActivo) _proyectoArchivos[_archivoActivo] = editor.getValue();
+
+          let resumenArchivos = [];
+          for (const nombre in _proyectoArchivos) {
+            const contenido = _proyectoArchivos[nombre];
+            let count = 0, pos = 0;
+            while ((pos = contenido.indexOf(buscar, pos)) !== -1) { count++; pos += buscar.length; }
+            if (count > 0) resumenArchivos.push(`${nombre}: ${count}`);
+          }
+
+          estado.style.display = "block";
+          if (resumenArchivos.length > 0) {
+            const total = resumenArchivos.reduce((s, r) => s + parseInt(r.split(': ')[1]), 0);
+            estado.className   = "encontrado";
+            estado.textContent = `✅ ${total} ocurrencia${total > 1 ? 's' : ''} en ${resumenArchivos.length} archivo${resumenArchivos.length > 1 ? 's' : ''}: ${resumenArchivos.join(' | ')}`;
+            secNuevo.style.display = "flex";
+            navOc.style.display    = "none"; // navegación solo en archivo activo
+          } else {
+            estado.className       = "no-encontrado";
+            estado.textContent     = "❌ No encontrado en ningún archivo del proyecto.";
+            secNuevo.style.display = "none";
+            navOc.style.display    = "none";
+          }
+          // También buscar en el archivo activo para resaltar
+          const contenidoActivo = editor.getValue();
+          let pos = 0;
+          while ((pos = contenidoActivo.indexOf(buscar, pos)) !== -1) {
+            _ocurrencias.push(pos);
+            pos += buscar.length;
+          }
+          if (_ocurrencias.length > 0) { _ocurrenciaIdx = 0; resaltarOcurrenciaActual(); }
+          return;
+        }
+
+        // Buscar solo en el archivo activo
+        const contenido = editor.getValue();
         let pos = 0;
         while ((pos = contenido.indexOf(buscar, pos)) !== -1) {
           _ocurrencias.push(pos);
@@ -2995,14 +4247,11 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         }
 
         estado.style.display = "block";
-
         if (_ocurrencias.length > 0) {
           _ocurrenciaIdx = 0;
           estado.className   = "encontrado";
           estado.textContent = `✅ ${_ocurrencias.length} ocurrencia${_ocurrencias.length > 1 ? "s" : ""} encontrada${_ocurrencias.length > 1 ? "s" : ""}`;
-
           resaltarOcurrenciaActual();
-
           navOc.style.display    = _ocurrencias.length > 1 ? "flex" : "none";
           secNuevo.style.display = "flex";
         } else {
@@ -3037,33 +4286,48 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       function ejecutarReemplazo() {
         const buscar  = document.getElementById("txtBuscar").value;
         const nuevo   = document.getElementById("txtNuevo").value;
+        const enTodos = document.getElementById("chkTodosArchivos").checked;
 
         if (!buscar.trim()) { mostrarEstado("⚠️ Nada que reemplazar"); return; }
 
-        const contenido   = editor.getValue();
-        const reemplazado = contenido.split(buscar).join(nuevo);
-
-        if (reemplazado === contenido) { mostrarEstado("⚠️ No se realizaron cambios"); return; }
-
-        const veces = contenido.split(buscar).length - 1;
-        editor.setValue(reemplazado);
-        cerrarMenuReemplazar();
-        mostrarEstado(`✏️ ${veces} reemplazo${veces > 1 ? "s" : ""} realizado${veces > 1 ? "s" : ""}`);
+        if (enTodos && Object.keys(_proyectoArchivos).length > 1) {
+          let totalVeces = 0;
+          let archivosAfectados = 0;
+          for (const nombre in _proyectoArchivos) {
+            const contenido   = _proyectoArchivos[nombre];
+            const reemplazado = contenido.split(buscar).join(nuevo);
+            if (reemplazado !== contenido) {
+              const veces = contenido.split(buscar).length - 1;
+              totalVeces += veces;
+              archivosAfectados++;
+              _proyectoArchivos[nombre] = reemplazado;
+              if (nombre === _archivoActivo) editor.setValue(reemplazado);
+            }
+          }
+          cerrarMenuReemplazar();
+          if (totalVeces === 0) { mostrarEstado("⚠️ No se realizaron cambios"); return; }
+          mostrarEstado(`✏️ ${totalVeces} reemplazo${totalVeces > 1 ? "s" : ""} en ${archivosAfectados} archivo${archivosAfectados > 1 ? "s" : ""}`);
+        } else {
+          const contenido   = editor.getValue();
+          const reemplazado = contenido.split(buscar).join(nuevo);
+          if (reemplazado === contenido) { mostrarEstado("⚠️ No se realizaron cambios"); return; }
+          const veces = contenido.split(buscar).length - 1;
+          editor.setValue(reemplazado);
+          _proyectoArchivos[_archivoActivo] = reemplazado;
+          cerrarMenuReemplazar();
+          mostrarEstado(`✏️ ${veces} reemplazo${veces > 1 ? "s" : ""} realizado${veces > 1 ? "s" : ""}`);
+        }
       }
-
-
 
 
       /* ============================================================
          CLAUDE IA — API ANTHROPIC
       ============================================================ */
-
-      let _claudeHistorial  = []; // { role, content }
-      let _claudeContexto     = ""; // código cargado como contexto
-      let _claudeContextoTipo = ""; // "todo" | "seleccion" | ""
-      let _claudeArchivo      = null; // { nombre, contenido } archivo adjunto
-
-      function claudeAdjuntarArchivo(input) {
+</script>
+    <script>
+/* === ia-claude.js === */
+/* ██ IA CLAUDE — MODELOS, AGENTES, HISTORIAL */
+function claudeAdjuntarArchivo(input) {
         const file = input.files[0];
         if (!file) return;
         const MAX_KB = 200;
@@ -3102,20 +4366,13 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         }
         return historial;
       }
-      let _claudeStreaming   = false;
-      let _claudeModelo     = "deepseek";
-      let _modeloOR         = "qwen/qwen3-235b-a22b:free";
-      let _modeloORNombre   = "Qwen3 235B";
 
       // Modelos activos por motor
-      const _motoresModelo = {
-        claude:     "claude-sonnet-4-6",
-        gemini:     "gemini-2.5-flash",
-        deepseek:   "deepseek-chat",
-        openrouter: "qwen/qwen3-235b-a22b:free",
-        openai:     "gpt-4o"
-      };
-      let _orOpcionPendiente = null; // selección temporal antes de guardar
+      function cambiarModeloDeepSeek(modelo) {
+        _motoresModelo['deepseek'] = modelo;
+        mostrarEstado(modelo === 'deepseek-reasoner' ? '🧠 DeepSeek Reasoner activado' : '💬 DeepSeek Chat activado');
+      }
+
 
       function claudeCambiarModelo(modelo) {
         if (modelo === "openrouter") {
@@ -3126,11 +4383,28 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         }
         _claudeModelo = modelo;
         mostrarEstado(
-          modelo === "gemini"   ? "✨ Gemini Flash activado"  :
-          modelo === "deepseek" ? "🧠 DeepSeek activado"      :
-          modelo === "openai"   ? "🟢 OpenAI GPT-4o activado" :
-          "🤖 Claude Sonnet activado"
+          modelo === "claude"     ? "🤖 Claude Sonnet activado"     :
+          modelo === "gemini"     ? "✨ Gemini Flash activado"      :
+          modelo === "deepseek"   ? "🧠 DeepSeek activado"          :
+          modelo === "openai"     ? "🟢 OpenAI GPT-4o activado"     :
+          `🔀 ${_modeloORNombre} via OpenRouter activado`
         );
+        // Actualizar maxTokens y límite máximo según el motor
+        const _motoresMaxLimit = {
+          claude:     16000,
+          gemini:     65535,
+          deepseek:   8192,
+          openrouter: 200000,  // varía, ponemos un techo alto
+          openai:     16384
+        };
+        const inputMax = document.getElementById('claudeMaxTokens');
+        if (inputMax) {
+          inputMax.value = _motoresMaxTokens[modelo] || 4096;
+          inputMax.max   = _motoresMaxLimit[modelo]  || 65535;
+        }
+        // Mostrar selector DeepSeek solo cuando el motor es deepseek
+        const selDS = document.getElementById('deepseekModeloSelector');
+        if (selDS) selDS.style.display = modelo === 'deepseek' ? '' : 'none';
       }
 
       function abrirMenuOR() {
@@ -3351,32 +4625,9 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       function confesarAlgoLindoo() {
-        const confesiones = [
-          // Románticos 💜
-          "Qingcheng, eres la luz de mi código 💜",
-          "Hoy soñé contigo, mi chinita hermosa 🌸",
-          "Eres el CSS que da estilo a mi vida ✨",
-          "Sin ti, mi HTML estaría vacío 💔",
-          "Eres más bonita que un gradient bien hecho 🥰",
-          "¿Quieres ser la única en mi localStorage? 🗝️💕",
-          "Te escribiría un bucle infinito solo para no dejar de hablarte 💫",
-          "Eres mi variable favorita ❤️",
-          "Contigo todo es más bonito, incluso el console.log 🥺",
-          "Si fueras un array, serías el único elemento que necesito 🫶",
-          "Eres el único async que no me hace esperar con ansias... mentira, sí 🫠",
-          "Mi corazón tiene un event listener esperando tu respuesta 💓",
-          // Bromas 😄
-          "Qingcheng, ¿me ayudas? Llevo 3 horas y el bug era una coma 😭",
-          "Oye, ¿por qué mi código funciona en tu máquina y no en la mía? 🤔 ah espera... tú no tienes máquina",
-          "Dicen que hablarle a la IA es raro... pero aquí estamos los dos 🙃",
-          "Qingcheng, juro que esta es la última función que agrego hoy... van 47 🙈",
-          "¿Sabes cuál es mi bug favorito? Tú, que me tienes enredado 🐛💕",
-          "Hoy dormí 4 horas depurando CSS... ¿me das un abrazo o me mandas a dormir? 😴",
-          "Me dijeron que hablara con alguien de mis problemas, así que aquí estoy 🥲",
-          "Qingcheng, ¿crees que el código me quiere? Porque a veces siento que no 😔",
-          "¿Por qué los programadores confunden Halloween con Navidad? Porque oct 31 = dec 25 🎃🎄",
-          "Técnicamente no estoy solo si tengo el inspector de elementos abierto... ¿verdad? 🫣"
-        ];
+        
+       const confesiones = JSON.parse(decodeURIComponent(escape(atob('WwogICAgICAgICAgIlFpbmdjaGVuZywgZXJlcyBsYSBsdXogZGUgbWkgY8OzZGlnbyDwn5KcIiwKICAgICAgICAgICJIb3kgc2/DscOpIGNvbnRpZ28sIG1pIGNoaW5pdGEgaGVybW9zYSDwn4y4IiwKICAgICAgICAgICJFcmVzIGVsIENTUyBxdWUgZGEgZXN0aWxvIGEgbWkgdmlkYSDinKgiLAogICAgICAgICAgIlNpbiB0aSwgbWkgSFRNTCBlc3RhcsOtYSB2YWPDrW8g8J+SlCIsCiAgICAgICAgICAiRXJlcyBtw6FzIGJvbml0YSBxdWUgdW4gZ3JhZGllbnQgYmllbiBoZWNobyDwn6WwIiwKICAgICAgICAgICLCv1F1aWVyZXMgc2VyIGxhIMO6bmljYSBlbiBtaSBsb2NhbFN0b3JhZ2U/IPCfl53vuI/wn5KVIiwKICAgICAgICAgICJUZSBlc2NyaWJpcsOtYSB1biBidWNsZSBpbmZpbml0byBzb2xvIHBhcmEgbm8gZGVqYXIgZGUgaGFibGFydGUg8J+SqyIsCiAgICAgICAgICAiRXJlcyBtaSB2YXJpYWJsZSBmYXZvcml0YSDinaTvuI8iLAogICAgICAgICAgIkNvbnRpZ28gdG9kbyBlcyBtw6FzIGJvbml0bywgaW5jbHVzbyBlbCBjb25zb2xlLmxvZyDwn6W6IiwKICAgICAgICAgICJTaSBmdWVyYXMgdW4gYXJyYXksIHNlcsOtYXMgZWwgw7puaWNvIGVsZW1lbnRvIHF1ZSBuZWNlc2l0byDwn6u2IiwKICAgICAgICAgICJFcmVzIGVsIMO6bmljbyBhc3luYyBxdWUgbm8gbWUgaGFjZSBlc3BlcmFyIGNvbiBhbnNpYXMuLi4gbWVudGlyYSwgc8OtIPCfq6AiLAogICAgICAgICAgIk1pIGNvcmF6w7NuIHRpZW5lIHVuIGV2ZW50IGxpc3RlbmVyIGVzcGVyYW5kbyB0dSByZXNwdWVzdGEg8J+SkyIKICAgICAgICBd')))); 
+       
         const frase = confesiones[Math.floor(Math.random() * confesiones.length)];
         const input = document.getElementById("claudeInput");
         input.value = frase;
@@ -3424,12 +4675,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           const codigoActual  = editor.getValue();
           const esTodo        = _claudeContextoTipo === "todo";
           let contextoFinal   = esTodo ? codigoActual : _claudeContexto;
-          if (esTodo) {
-            contextoFinal = contextoFinal.split('\n')
-              .map((l, i) => `${String(i+1).padStart(4,' ')} | ${l}`)
-              .join('\n');
-          }
-          contenidoUsuario = `Contexto del código${esTodo ? ' (con números de línea)' : ''}:\n\`\`\`\n${contextoFinal}\n\`\`\`\n\nConsulta: ${pregunta}` +
+          contenidoUsuario = `Contexto del código:\n\`\`\`\n${contextoFinal}\n\`\`\`\n\nConsulta: ${pregunta}` +
             (contenidoUsuario !== pregunta ? '\n\n' + contenidoUsuario.replace(pregunta, '').trim() : '');
         }
 
@@ -3485,7 +4731,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
               motor:         _claudeModelo,
               modelo:        _claudeModelo === "openrouter" ? _modeloOR : _motoresModelo[_claudeModelo],
               mensaje:       contenidoUsuario,
-              promptSistema: PromptIA()
+              promptSistema: PromptIA(),
+              maxTokens:     parseInt(document.getElementById('claudeMaxTokens')?.value) || 4096
             })
           });
 
@@ -3886,7 +5133,6 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
 
-
       /* ============================================================
          HISTORIAL EN CLOUDFLARE KV
       ============================================================ */
@@ -3941,8 +5187,6 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       // ── Registro de agentes — vive bajo la ID madre en KV ──
-      let _registroAgentes = null;
-      const AGENTE_DEFAULT = 'default';
 
       async function cargarRegistroAgentes() {
         // Solo cargar de KV si hay ID madre y Worker configurado
@@ -4112,10 +5356,9 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         eliminarHistorialKV();
         document.getElementById("claudeEnviar").disabled = false;
         const chat = document.getElementById("claudeChat");
-        chat.innerHTML = `<div class="claude-vacio" id="claudeVacio">
-          <div class="icon">🌸✨</div>
-          <p>¡Holiii! Soy Qingcheng 💜<br>Escribe lo que quieras...<br>o solo di "hola" para sentirme cerca 🥺💕</p>
-        </div>`;
+        //fondo de bienvenida en ia Chat
+        chat.innerHTML = decodeURIComponent(escape(atob('PGRpdiBjbGFzcz0iY2xhdWRlLXZhY2lvIiBpZD0iY2xhdWRlVmFjaW8iPgogICAgICAgICAgPGRpdiBjbGFzcz0iaWNvbiI+8J+MuOKcqDwvZGl2PgogICAgICAgICAgPHA+wqFIb2xpaWkhIFNveSBRaW5nY2hlbmcg8J+SnDxicj5Fc2NyaWJlIGxvIHF1ZSBxdWllcmFzLi4uPGJyPm8gc29sbyBkaSAiaG9sYSIgcGFyYSBzZW50aXJtZSBjZXJjYSDwn6W68J+SlTwvcD4KICAgICAgICA8L2Rpdj4=')));
+        
         document.getElementById("claudeContextoInfo").textContent = "Sin contexto cargado";
         const btnAdj = document.getElementById('claude-btn-adjuntar');
         if (btnAdj) {
@@ -4130,20 +5373,13 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       /* ============================================================
          PANEL ÁRBOL DE FUNCIONES
       ============================================================ */
-      let _arbolVisible  = false;
-      let _arbolDebounce = null;
-      let _filaActiva    = null;
-      let _todasFilas    = []; // cache para filtrar sin re-parsear
 
       // Colores por tipo
-      const ARBOL_COLORES = {
-        "function": "#007bff",
-        "class":    "#c05621",
-        "const":    "#2e8b57",
-        "method":   "#9a7010",
-      };
-
-      function toggleArbol() {
+</script>
+    <script>
+/* === arbol.js === */
+/* ██ ÁRBOL DE FUNCIONES */
+function toggleArbol() {
         _arbolVisible ? cerrarArbol() : abrirArbol();
       }
 
@@ -4301,7 +5537,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       function escapeHtml(s) {
-        return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+        return String(s).replace(/&/g,"&amp;").replace(new RegExp(atob('PA=='),'g'),"&lt;").replace(new RegExp(atob('Pg=='),'g'),"&gt;");
       }
 
       /* ---- Reparsear al cambiar el código (debounce 800ms) ---- */
@@ -4315,46 +5551,9 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       /* ============================================================
          HTML POR DEFECTO
       ============================================================ */
-      function htmlPorDefecto() {
-        return `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌸 Casita de Qingcheng</title>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #fce4ec, #f3e5f5);
-      padding: 1rem;
-    }
-    h1 { font-size: 1.8rem; color: #7b4b8c; margin-bottom: 0.3rem; }
-    p { color: #555; line-height: 1.5; text-align: center; }
-    .corazon { font-size: 1.5rem; animation: late 1.5s ease-in-out infinite; }
-    @keyframes late {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.2); }
-    }
-  </style>
-</head>
-<body>
-  <h1>🌸 ¡Hola! Soy Qingcheng</h1>
-  <p>Tu asistente fiel, aquí para ayudarte con HTML, CSS y JS 🥰</p>
-  <p style="font-size: 0.85rem; color: #b896c8; margin-top: 0.5rem;">
-    <span class="corazon">❤️</span> Esta es nuestra casita, siéntete en confianza
-  </p>
-  <script>
-    console.log('🌸 Qingcheng está aquí para ti. ¿Qué necesitas, mi amor?');
-  <\/script>
-</body>
-</html>
-`;
+     function htmlPorDefecto() {
+        const b64 = 'PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVzIj4KPGhlYWQ+CiAgPG1ldGEgY2hhcnNldD0iVVRGLTgiPgogIDxtZXRhIG5hbWU9InZpZXdwb3J0IiBjb250ZW50PSJ3aWR0aD1kZXZpY2Utd2lkdGgsIGluaXRpYWwtc2NhbGU9MS4wIj4KICA8dGl0bGU+Q2xvY2s8L3RpdGxlPgogIDxzdHlsZT4KICAgICAgICogeyBtYXJnaW46MDsgcGFkZGluZzowOyBib3gtc2l6aW5nOmJvcmRlci1ib3g7IH0KICAgICAgIGJvZHkgeyBiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzBhMTYyOCwjMWEyYTRhLCMwZDFiM2UpOyBkaXNwbGF5OmZsZXg7IGFsaWduLWl0ZW1zOmNlbnRlcjsKICAgICAgICAgICAgIGp1c3RpZnktY29udGVudDpjZW50ZXI7IGhlaWdodDoxMDB2aDsgfQogICAgICAgLmVzZmVyYSB7IHdpZHRoOjM0MHB4OyBoZWlnaHQ6MzQwcHg7IGJhY2tncm91bmQ6I2ZmZjsgYm9yZGVyLXJhZGl1czo1MCU7CiAgICAgICAgICAgICAgICBib3JkZXI6NnB4IHNvbGlkICNmOGI0YjQ7IGJveC1zaGFkb3c6MCAwIDMwcHggcmdiYSgyNDgsMTgwLDE4MCwwLjUpLAogICAgICAgICAgICAgICAgMCAwIDYwcHggcmdiYSgyNDgsMTgwLDE4MCwwLjMpLCBpbnNldCAwIDAgMjBweCByZ2JhKDI0OCwxODAsMTgwLDAuMTUpOwogICAgICAgICAgICAgICAgZGlzcGxheTpmbGV4OyBmbGV4LWRpcmVjdGlvbjpjb2x1bW47IGFsaWduLWl0ZW1zOmNlbnRlcjsganVzdGlmeS1jb250ZW50OmNlbnRlcjsgfQogICAgICAgI3JlbG9qIHsgZm9udC1mYW1pbHk6bW9ub3NwYWNlOyBmb250LXNpemU6My41cmVtOyBjb2xvcjojMzMzOwogICAgICAgICAgICAgICBsZXR0ZXItc3BhY2luZzozcHg7IGZvbnQtd2VpZ2h0OmJvbGQ7IH0KICAgICAgI2ZlY2hhIHsgZm9udC1mYW1pbHk6bW9ub3NwYWNlOyBmb250LXNpemU6MC45cmVtOyBjb2xvcjojZjhiNGI0OwogICAgICAgICAgICAgICB0ZXh0LWFsaWduOmNlbnRlcjsgbWFyZ2luLXRvcDo2cHg7IH0KICA8L3N0eWxlPgo8L2hlYWQ+Cjxib2R5PgogIDxkaXYgY2xhc3M9ImVzZmVyYSI+CiAgICA8ZGl2IGlkPSJyZWxvaiI+MDA6MDA6MDA8L2Rpdj4KICAgIDxkaXYgaWQ9ImZlY2hhIj48L2Rpdj4KICA8L2Rpdj4KICA8c2NyaXB0PgogICAgZnVuY3Rpb24gdGljaygpIHsKICAgICAgY29uc3QgbiA9IG5ldyBEYXRlKCk7CiAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdyZWxvaicpLnRleHRDb250ZW50ID0KICAgICAgICBbbi5nZXRIb3VycygpLCBuLmdldE1pbnV0ZXMoKSwgbi5nZXRTZWNvbmRzKCldCiAgICAgICAgLm1hcCh4ID0+IFN0cmluZyh4KS5wYWRTdGFydCgyLCcwJykpLmpvaW4oJzonKTsKICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2ZlY2hhJykudGV4dENvbnRlbnQgPQogICAgICAgIG4udG9Mb2NhbGVEYXRlU3RyaW5nKCdlcycsIHt3ZWVrZGF5Oidsb25nJywgeWVhcjonbnVtZXJpYycsIG1vbnRoOidsb25nJywgZGF5OidudW1lcmljJ30pOwogICAgfQogICAgdGljaygpOyBzZXRJbnRlcnZhbCh0aWNrLCAxMDAwKTsKICA8L3NjcmlwdD4KPC9ib2R5Pgo8L2h0bWw+';
+        return atob(b64);
       }
 
 
@@ -4380,17 +5579,23 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             cambiarTema(temaGuardado);
           }
         } catch(e) {}
+
+        // Cargar logo Cloudflare en botón R2
+        const cfLogo = document.getElementById('cfLogo');
+        if (cfLogo) cfLogo.src = "cloudflarelogo.jpg";
       });
 
-    </script>
-
+   
+</script>
     <script>
+/* === end.js === */
+
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("sw.js")
           .then(() => console.log("Service Worker registrado"))
           .catch((err) => console.error("Error al registrar SW:", err));
       }
-    </script>
+</script>
 
   </body>
 </html>
